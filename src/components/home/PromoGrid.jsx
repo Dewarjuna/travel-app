@@ -1,22 +1,8 @@
 import { useEffect, useState } from 'react';
 import { TagIcon } from '@heroicons/react/24/outline';
-import { promoService } from '../../api/services/promoService';
-
+import { usePromos } from '../../hooks/usePromos';
 const PromoGrid = () => {
-  const [promos, setPromos] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const fetchPromos = async () => {
-    setLoading(true);
-    try {
-      const response = await promoService.list();
-      setPromos(response.data || []);
-    } catch (error) {
-      console.error('Error fetching promos:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-  useEffect(() => {fetchPromos();}, []);
+  const {promos, loading} = usePromos();
 
   return (
     <section className="bg-gray-50 py-12">

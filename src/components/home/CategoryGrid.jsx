@@ -1,23 +1,9 @@
-import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronRightIcon } from '@heroicons/react/24/outline';
-import { categoryService } from '../../api/services/categoryService';
+import { useCategories } from '../../hooks/useCategories';
 
 const CategoryGrid = () => {
-  const [categories, setCategories] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const fetchCategories = async () => {
-    setLoading(true);
-    try {
-      const response = await categoryService.list();
-      setCategories(response.data || []);
-    } catch (error) {
-      console.error('Error fetching categories:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-  useEffect(() => {fetchCategories();}, []);
+  const { categories, loading } = useCategories();
 
   return (
     <section className="bg-white py-8 border-b border-gray-100">
