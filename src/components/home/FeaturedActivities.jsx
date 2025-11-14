@@ -1,49 +1,140 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { ChevronRightIcon, MapPinIcon, StarIcon } from '@heroicons/react/24/outline';
 import { activityService } from '../../api/services/activityService';
 
 const FeaturedActivities = () => {
   const [activities, setActivities] = useState([]);
   const [loading, setLoading] = useState(true);
-
-  const initActivities = () => {
+  const fetchActivities = async () => {
     setLoading(true);
-    activityService
-      .list()
-      .then((r) => setActivities(r.data || []))
-      .finally(() => setLoading(false));
+    try {
+      const response = await activityService.list();
+      setActivities(response.data || []);
+    } catch (error) {
+      console.error('Error fetching activities:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+  useEffect(() => {fetchActivities();}, []);
+  const calculateDiscount = (price, discountPrice) => {
+    if (!price || !discountPrice || price === discountPrice) return null;
+    return Math.round(((price - discountPrice) / price) * 100);
   };
 
-  useEffect(initActivities, []);
-
   return (
-    <section className="container mx-auto px-4 pb-14">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-bold">Featured Activities</h2>
-        <Link to="/activities" className="text-primary hover:underline">Browse activities</Link>
-      </div>
+    <section className="bg-white py-12">
+      <div className="container mx-auto px-4">
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900">Featured Activities</h2>
+            <p className="text-gray-600 mt-1">Discover amazing experiences</p>
+          </div>
+          <Link
+            to="/activities"
+            className="text-primary text-sm font-semibold hover:text-primary/80 transition-colors flex items-center gap-1 group"
+          >
+            Browse all
+            <ChevronRightIcon className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+          </Link>
+        </div>
 
-      {loading ? (
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {Array.from({ length: 8 }).map((_, i) => <div key={i} className="card h-64 animate-pulse" />)}
-        </div>
-      ) : (
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {activities.slice(0, 8).map((a) => (
-            <Link key={a.id} to={`/activity/${a.id}`} className="card hover:shadow-xl transition">
-              <img src={a.imageUrls?.[0]} alt={a.title} className="w-full h-44 object-cover rounded-lg mb-3" />
-              <h3 className="font-semibold text-lg">{a.title}</h3>
-              <p className="text-sm text-gray-600 line-clamp-2">{a.description}</p>
-              <div className="mt-3 flex items-center gap-2">
-                <span className="text-primary font-bold">Rp {a.price_discount?.toLocaleString?.()}</span>
-                {a.price_discount < a.price && (
-                  <span className="text-gray-500 line-through">Rp {a.price?.toLocaleString?.()}</span>
-                )}
-              </div>
-            </Link>
-          ))}
-        </div>
-      )}
+        {loading ? (
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {Array.from({ length: 8 }).map((_, index) => (
+              <div
+                key={index}
+                className="h-80 rounded-xl bg-linear-to-br from-gray-100 to-gray-200 animate-pulse"
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 items-stretch">
+            {activities.slice(0, 8).map((activity) => {
+              const discount = calculateDiscount(activity.price, activity.price_discount);
+              
+              return (
+                <Link
+                  key={activity.id}
+                  to={`/activities/${activity.id}`}
+                  className="group flex flex-col h-full bg-white rounded-xl shadow-sm hover:shadow-xl border border-gray-100 overflow-hidden transition-all duration-300 hover:-translate-y-1"
+                >
+                  {/* Image Section */}
+                  <div className="relative h-48 overflow-hidden bg-gray-100 shrink-0">
+                    <img
+                      src={activity.imageUrls?.[0]}
+                      alt={activity.title}
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                      loading="lazy"
+                    />
+                    {/* Gradient Overlay */}
+                    <div className="absolute inset-0 bg-linear-to-t from-black/50 to-transparent" />
+                    
+                    {/* Discount Badge */}
+                    {discount && (
+                      <div className="absolute top-3 left-3 bg-red-500 text-white px-2 py-1 rounded-lg text-xs font-bold shadow-lg">
+                        {discount}% OFF
+                      </div>
+                    )}
+
+                    {/* Rating */}
+                    {activity.rating && (
+                      <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-lg flex items-center gap-1 shadow-sm">
+                        <StarIcon className="w-4 h-4 text-yellow-500 fill-yellow-500" />
+                        <span className="text-xs font-semibold text-gray-900">
+                          {activity.rating}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Content Section */}
+                  <div className="flex-1 flex flex-col p-4">
+                    <div className="flex-1">
+                      {/* Location */}
+                      {(activity.city || activity.province) && (
+                        <div className="flex items-center gap-1 text-xs text-gray-500 mb-2">
+                          <MapPinIcon className="w-3 h-3" />
+                          <span className="line-clamp-1">
+                            {activity.city && activity.province
+                              ? `${activity.city}, ${activity.province}`
+                              : activity.city || activity.province}
+                          </span>
+                        </div>
+                      )}
+
+                      {/* Title */}
+                      <h3 className="font-bold text-base text-gray-900 mb-2 line-clamp-2 group-hover:text-primary transition-colors">
+                        {activity.title}
+                      </h3>
+
+                      {/* Description */}
+                      <p className="text-sm text-gray-600 line-clamp-2 mb-3">
+                        {activity.description}
+                      </p>
+                    </div>
+
+                    {/* Price Section */}
+                    <div className="mt-auto pt-3 border-t border-gray-100">
+                      <div className="flex items-center gap-2">
+                        <span className="text-lg font-bold text-primary">
+                          Rp {activity.price_discount?.toLocaleString('id-ID')}
+                        </span>
+                        {activity.price_discount < activity.price && (
+                          <span className="text-sm text-gray-400 line-through">
+                            Rp {activity.price?.toLocaleString('id-ID')}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        )}
+      </div>
     </section>
   );
 };
