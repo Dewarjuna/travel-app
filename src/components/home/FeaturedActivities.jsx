@@ -1,23 +1,10 @@
-import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronRightIcon, MapPinIcon, StarIcon } from '@heroicons/react/24/outline';
-import { activityService } from '../../api/services/activityService';
+import { useActivities } from '../../hooks/useActivities';
 
 const FeaturedActivities = () => {
-  const [activities, setActivities] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const fetchActivities = async () => {
-    setLoading(true);
-    try {
-      const response = await activityService.list();
-      setActivities(response.data || []);
-    } catch (error) {
-      console.error('Error fetching activities:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-  useEffect(() => {fetchActivities();}, []);
+  const { activities, loading } = useActivities();
+
   const calculateDiscount = (price, discountPrice) => {
     if (!price || !discountPrice || price === discountPrice) return null;
     return Math.round(((price - discountPrice) / price) * 100);
@@ -53,14 +40,13 @@ const FeaturedActivities = () => {
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 items-stretch">
             {activities.slice(0, 8).map((activity) => {
               const discount = calculateDiscount(activity.price, activity.price_discount);
-              
+
               return (
                 <Link
                   key={activity.id}
                   to={`/activities/${activity.id}`}
                   className="group flex flex-col h-full bg-white rounded-xl shadow-sm hover:shadow-xl border border-gray-100 overflow-hidden transition-all duration-300 hover:-translate-y-1"
                 >
-                  {/* Image Section */}
                   <div className="relative h-48 overflow-hidden bg-gray-100 shrink-0">
                     <img
                       src={activity.imageUrls?.[0]}
@@ -68,17 +54,14 @@ const FeaturedActivities = () => {
                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                       loading="lazy"
                     />
-                    {/* Gradient Overlay */}
                     <div className="absolute inset-0 bg-linear-to-t from-black/50 to-transparent" />
-                    
-                    {/* Discount Badge */}
+
                     {discount && (
                       <div className="absolute top-3 left-3 bg-red-500 text-white px-2 py-1 rounded-lg text-xs font-bold shadow-lg">
                         {discount}% OFF
                       </div>
                     )}
 
-                    {/* Rating */}
                     {activity.rating && (
                       <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-lg flex items-center gap-1 shadow-sm">
                         <StarIcon className="w-4 h-4 text-yellow-500 fill-yellow-500" />
@@ -89,10 +72,8 @@ const FeaturedActivities = () => {
                     )}
                   </div>
 
-                  {/* Content Section */}
                   <div className="flex-1 flex flex-col p-4">
                     <div className="flex-1">
-                      {/* Location */}
                       {(activity.city || activity.province) && (
                         <div className="flex items-center gap-1 text-xs text-gray-500 mb-2">
                           <MapPinIcon className="w-3 h-3" />
@@ -104,18 +85,15 @@ const FeaturedActivities = () => {
                         </div>
                       )}
 
-                      {/* Title */}
                       <h3 className="font-bold text-base text-gray-900 mb-2 line-clamp-2 group-hover:text-primary transition-colors">
                         {activity.title}
                       </h3>
 
-                      {/* Description */}
                       <p className="text-sm text-gray-600 line-clamp-2 mb-3">
                         {activity.description}
                       </p>
                     </div>
 
-                    {/* Price Section */}
                     <div className="mt-auto pt-3 border-t border-gray-100">
                       <div className="flex items-center gap-2">
                         <span className="text-lg font-bold text-primary">

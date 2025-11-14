@@ -1,28 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useNavigate, createSearchParams } from 'react-router-dom';
-import { bannerService } from '../../api/services/bannerService';
+import { useBanners } from '../../hooks/useBanners';
 
 const Hero = () => {
   const [searchQuery, setSearchQuery] = useState('');
-  const [banners, setBanners] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { banners, loading } = useBanners();
   const navigate = useNavigate();
-
-  const fetchBanners = async () => {
-    setLoading(true);
-    try {
-      const response = await bannerService.list();
-      setBanners(response.data || []);
-    } catch (error) {
-      console.error('Error fetching banners:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchBanners();
-  }, []);
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -45,8 +28,7 @@ const Hero = () => {
                 <span className="block text-primary mt-1">adventure</span>
               </h1>
               <p className="text-lg md:text-xl text-gray-600 leading-relaxed max-w-xl">
-                Discover unique activities, exciting experiences, and exclusive
-                promos tailored just for you.
+                Discover unique activities, exciting experiences, and exclusive promos tailored just for you.
               </p>
             </div>
 
