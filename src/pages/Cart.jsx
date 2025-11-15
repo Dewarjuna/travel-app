@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   ShoppingCartIcon, 
@@ -7,97 +7,49 @@ import {
   PlusIcon,
   CreditCardIcon 
 } from '@heroicons/react/24/outline';
-import { cartService } from '../api/services/cartService';
-import { paymentMethodService } from '../api/services/paymentMethod';
-import { transactionService } from '../api/services/transactionService';
+import { useTransactions } from '../hooks/useTransactions.js';
+import { useCart } from '../hooks/useCart';
+import { usePaymentMethods } from '../hooks/usePaymentMethod';
 import { useToast } from '../components/ui/Toast';
 import Button from '../components/ui/Button';
 
 const Cart = () => {
-  const [cartItems, setCartItems] = useState([]);
-  const [paymentMethods, setPaymentMethods] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { cartItems, loading: cartLoading, updateCartQuantity, removeFromCart } = useCart();
+  const { createTransaction, creating } = useTransactions();
+  const { paymentMethods, loading: paymentLoading } = usePaymentMethods();
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('');
   const [checkingOut, setCheckingOut] = useState(false);
   const navigate = useNavigate();
   const { addToast } = useToast();
-
-  const fetchData = async () => {
-    setLoading(true);
-    try {
-      const [cartRes, payRes] = await Promise.all([
-        cartService.list(),
-        paymentMethodService.list(),
-      ]);
-      setCartItems(cartRes.data || []);
-      setPaymentMethods(payRes.data || []);
-    } catch (error) {
-      console.error('Error loading cart:', error);
-      addToast('Failed to load cart', 'error');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchData();
-  }, []);
-
   const total = cartItems.reduce((sum, item) => {
     const price = item.activity?.price_discount || item.price_discount || 0;
     const qty = item.quantity || 0;
     return sum + (price * qty);
   }, 0);
-
-  const handleUpdateQuantity = async (cartId, newQty) => {
-    if (newQty < 1) return;
-    try {
-      await cartService.update(cartId, newQty);
-      await fetchData();
-      addToast('Quantity updated', 'success');
-    } catch (error) {
-      console.error('Error updating quantity:', error);
-      addToast('Failed to update quantity', 'error');
-    }
-  };
-
-  const handleRemove = async (cartId) => {
-    try {
-      await cartService.remove(cartId);
-      await fetchData();
-      addToast('Item removed from cart', 'success');
-    } catch (error) {
-      console.error('Error removing item:', error);
-      addToast('Failed to remove item', 'error');
-    }
-  };
-
-  const handleCheckout = async () => {
+   const handleCheckout = async function() {
     if (!selectedPaymentMethod) {
       addToast('Please select a payment method', 'error');
       return;
     }
-
     if (cartItems.length === 0) {
       addToast('Cart is empty', 'error');
       return;
     }
-
     setCheckingOut(true);
     try {
-      const cartIds = cartItems.map(item => item.id);
-      await transactionService.create(cartIds, selectedPaymentMethod);
+      const cartIds = cartItems.map(function(item) { return item.id; });
+      console.log('checkout dimulai', { cartIds, selectedPaymentMethod, total });
+      await createTransaction(cartIds, selectedPaymentMethod);
       addToast('Checkout successful!', 'success');
       navigate('/transactions');
     } catch (error) {
-      console.error('Checkout error:', error);
+      console.log('checkout gagal', error);
       addToast(error.response?.data?.message || 'Checkout failed', 'error');
     } finally {
       setCheckingOut(false);
     }
   };
-
-  if (loading) {
+  if (cartLoading || paymentLoading) {
     return (
       <div className="min-h-screen bg-linear-to-br from-gray-50 to-blue-50 py-10">
         <div className="container mx-auto px-4 max-w-6xl">
@@ -160,8 +112,8 @@ const Cart = () => {
                 const quantity = item.quantity || 1;
 
                 return (
-                  <div 
-                    key={item.id} 
+                  <div
+                    key={item.id}
                     className="bg-white rounded-2xl border border-gray-100 p-6 shadow-md hover:shadow-xl transition-all duration-300"
                   >
                     <div className="flex gap-5">
@@ -170,37 +122,31 @@ const Cart = () => {
                         alt={title}
                         className="w-28 h-28 object-cover rounded-xl shrink-0 shadow-sm"
                         onError={(e) => {
-                          e.target.src = 'https://via.placeholder.com/150?text=No+Image';
+                          e.target.src = '';
                         }}
                       />
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-bold text-xl text-gray-900 mb-2 line-clamp-2">
-                          {title}
-                        </h3>
+                        <h3 className="font-bold text-xl text-gray-900 mb-2 line-clamp-2">{title}</h3>
                         <p className="text-blue-600 font-bold text-xl mb-4">
                           Rp {priceDiscount.toLocaleString('id-ID')}
                         </p>
-                        
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-3">
                             <button
-                              onClick={() => handleUpdateQuantity(item.id, quantity - 1)}
+                              onClick={() => updateCartQuantity(item.id, quantity - 1)}
                               className="w-10 h-10 rounded-xl bg-white border-2 border-gray-300 hover:border-blue-600 hover:bg-blue-50 flex items-center justify-center transition-all shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
                               disabled={quantity <= 1}
                             >
                               <MinusIcon className="w-5 h-5" />
                             </button>
-                            <span className="w-14 text-center font-bold text-xl text-gray-900">
-                              {quantity}
-                            </span>
+                            <span className="w-14 text-center font-bold text-xl text-gray-900">{quantity}</span>
                             <button
-                              onClick={() => handleUpdateQuantity(item.id, quantity + 1)}
+                              onClick={() => updateCartQuantity(item.id, quantity + 1)}
                               className="w-10 h-10 rounded-xl bg-white border-2 border-gray-300 hover:border-blue-600 hover:bg-blue-50 flex items-center justify-center transition-all shadow-sm hover:shadow-md"
                             >
                               <PlusIcon className="w-5 h-5" />
                             </button>
                           </div>
-
                           <div className="text-right">
                             <p className="text-sm text-gray-500 mb-1 font-medium">Subtotal</p>
                             <p className="font-bold text-2xl text-gray-900">
@@ -209,9 +155,8 @@ const Cart = () => {
                           </div>
                         </div>
                       </div>
-
                       <button
-                        onClick={() => handleRemove(item.id)}
+                        onClick={() => removeFromCart(item.id)}
                         className="shrink-0 p-2.5 text-red-500 hover:bg-red-50 rounded-xl transition-all hover:shadow-md"
                         title="Remove from cart"
                       >
@@ -227,7 +172,6 @@ const Cart = () => {
           <div className="lg:sticky lg:top-24 h-fit">
             <div className="bg-white rounded-2xl border border-gray-100 p-8 shadow-xl">
               <h2 className="text-2xl font-bold text-gray-900 mb-6">Order Summary</h2>
-
               <div className="space-y-4 mb-6 pb-6 border-b border-gray-200">
                 <div className="flex justify-between text-gray-600 text-lg">
                   <span>Subtotal</span>
@@ -256,15 +200,19 @@ const Cart = () => {
                   onChange={(e) => setSelectedPaymentMethod(e.target.value)}
                 >
                   <option value="">Select payment method...</option>
-                  {paymentMethods.map(pm => (
-                    <option key={pm.id} value={pm.id}>
-                      {pm.name}
+                  {paymentMethods.map((method) => (
+                    <option key={method.id} value={method.id}>
+                      {method.name}
                     </option>
                   ))}
                 </select>
               </div>
-
-              <Button onClick={handleCheckout} disabled={checkingOut || !selectedPaymentMethod} loading={checkingOut} fullWidth>
+              <Button
+                onClick={handleCheckout}
+                disabled={checkingOut || !selectedPaymentMethod}
+                loading={checkingOut}
+                fullWidth
+              >
                 Proceed to Checkout
               </Button>
 

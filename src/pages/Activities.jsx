@@ -1,67 +1,60 @@
-import { useEffect, useState } from 'react';
-import { useNavigate, useSearchParams, Link } from 'react-router-dom';
-import { ChevronRightIcon, MapPinIcon, StarIcon } from '@heroicons/react/24/outline';
-import { activityService } from '../api/services/activityService';
-import { categoryService } from '../api/services/categoryService';
+import { useMemo, useEffect } from 'react';
+import { useSearchParams, Link } from 'react-router-dom';
+import { MapPinIcon, StarIcon } from '@heroicons/react/24/outline';
+import { useActivities } from '../hooks/useActivities';
+import { useCategories } from '../hooks/useCategories';
+
 const Activities = () => {
-  const [activities, setActivities] = useState([]);
-  const [categories, setCategories] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [searchParams, setSearchParams] = useSearchParams();
-  const navigate = useNavigate();
 
   const searchQuery = searchParams.get('q') || '';
   const categoryId = searchParams.get('category') || '';
 
-  const fetchActivities = async () => {
-    setLoading(true);
-    try {
-      let response;
-      
-      if (categoryId) {
-        response = await activityService.byCategory(categoryId);
-      } else {
-        response = await activityService.list();
-      }
-
-      let acts = response.data || [];
-
-      if (searchQuery) {
-        acts = acts.filter(activity =>
-          activity.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          activity.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          activity.city?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          activity.province?.toLowerCase().includes(searchQuery.toLowerCase())
-        );
-      }
-
-      setActivities(acts);
-    } catch (error) {
-      console.error('Error loading activities:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchCategories = async () => {
-    try {
-      const response = await categoryService.list();
-      setCategories(response.data || []);
-    } catch (error) {
-      console.error('Error loading categories:', error);
-    }
-  };
+  const { activities: allActivities, loading: activitiesLoading } = useActivities(categoryId);
+  const { categories, loading: categoriesLoading } = useCategories();
 
   useEffect(() => {
-    fetchCategories();
-  }, []);
+    console.log('semua activities', {
+      totalActivities: allActivities.length,
+      activitiesLoading,
+      categoryId: categoryId || 'All Categories',
+      searchQuery: searchQuery || 'No search query'
+    });
+  }, [allActivities, activitiesLoading, categoryId, searchQuery]);
 
   useEffect(() => {
-    fetchActivities();
-  }, [searchQuery, categoryId]);
+    console.log('semua categories', {
+      totalCategories: categories.length,
+      categoriesLoading
+    });
+  }, [categories, categoriesLoading]);
+
+  const filteredActivities = useMemo(() => {
+    if (!searchQuery) {
+      console.log('activities no filter');
+      return allActivities;
+    }
+    
+    const filtered = allActivities.filter(activity =>
+      activity.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      activity.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      activity.city?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      activity.province?.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+    
+    console.log('semua activities difilter', {
+      searchQuery,
+      originalCount: allActivities.length,
+      filteredCount: filtered.length,
+      filteredActivities: filtered.map(a => a.title)
+    });
+    
+    return filtered;
+  }, [searchQuery, allActivities]);
 
   const handleCategoryChange = (value) => {
-    const newParams = new URLSearchParams(searchParams);
+    console.log('kategori berubah:', value || 'Semua Kategori');
+    const newParams = new URLSearchParams(searchParams.toString());
     if (value) {
       newParams.set('category', value);
     } else {
@@ -71,7 +64,8 @@ const Activities = () => {
   };
 
   const handleSearchChange = (value) => {
-    const newParams = new URLSearchParams(searchParams);
+    console.log('search berubah:', value || 'kosong');
+    const newParams = new URLSearchParams(searchParams.toString());
     if (value) {
       newParams.set('q', value);
     } else {
@@ -85,39 +79,35 @@ const Activities = () => {
     return Math.round(((price - discountPrice) / price) * 100);
   };
 
+  const loading = activitiesLoading || categoriesLoading;
+
   return (
     <div className="min-h-screen bg-linear-to-br from-gray-50 to-blue-50">
       <div className="container mx-auto px-4 py-10">
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-gray-900 mb-2">Explore Activities</h1>
           <p className="text-gray-600 text-lg">
-            {categoryId ? `${activities.length} activities found` : 'Discover amazing experiences across Indonesia'}
+            {categoryId ? `${filteredActivities.length} activities found` : 'Discover amazing experiences across Indonesia'}
           </p>
         </div>
 
         <div className="mb-8 p-6 bg-white rounded-2xl shadow-lg border border-gray-100">
           <div className="grid sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Category
-              </label>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Category</label>
               <select
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white"
                 value={categoryId}
                 onChange={(e) => handleCategoryChange(e.target.value)}
               >
                 <option value="">All Categories</option>
-                {categories.map((category) => (
-                  <option key={category.id} value={category.id}>
-                    {category.name}
-                  </option>
+                {categories.map(({ id, name }) => (
+                  <option key={id} value={id}>{name}</option>
                 ))}
               </select>
             </div>
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Search
-              </label>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Search</label>
               <input
                 type="text"
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
@@ -156,13 +146,10 @@ const Activities = () => {
         {loading ? (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {Array.from({ length: 8 }).map((_, index) => (
-              <div
-                key={index}
-                className="h-80 rounded-2xl bg-linear-to-br from-gray-200 to-gray-300 animate-pulse"
-              />
+              <div key={index} className="h-80 rounded-2xl bg-linear-to-br from-gray-200 to-gray-300 animate-pulse" />
             ))}
           </div>
-        ) : activities.length === 0 ? (
+        ) : filteredActivities.length === 0 ? (
           <div className="py-20 text-center">
             <div className="inline-block p-6 bg-linear-to-br from-gray-100 to-gray-200 rounded-full mb-4">
               <svg className="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -183,7 +170,7 @@ const Activities = () => {
           </div>
         ) : (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {activities.map((activity) => {
+            {filteredActivities.map(activity => {
               const discount = calculateDiscount(activity.price, activity.price_discount);
 
               return (
@@ -200,23 +187,21 @@ const Activities = () => {
                       loading="lazy"
                     />
                     <div className="absolute inset-0 bg-linear-to-t from-black/60 via-black/20 to-transparent" />
-
+                    
                     {discount && (
                       <div className="absolute top-3 left-3 bg-linear-to-r from-red-500 to-red-600 text-white px-3 py-1.5 rounded-lg text-sm font-bold shadow-lg">
                         {discount}% OFF
                       </div>
                     )}
-
+                    
                     {activity.rating && (
                       <div className="absolute top-3 right-3 bg-white/95 backdrop-blur-sm px-2.5 py-1.5 rounded-lg flex items-center gap-1 shadow-md">
                         <StarIcon className="w-4 h-4 text-yellow-500 fill-yellow-500" />
-                        <span className="text-sm font-bold text-gray-900">
-                          {activity.rating}
-                        </span>
+                        <span className="text-sm font-bold text-gray-900">{activity.rating}</span>
                       </div>
                     )}
                   </div>
-
+                  
                   <div className="flex-1 flex flex-col p-5">
                     <div className="flex-1">
                       {(activity.city || activity.province) && (
@@ -229,16 +214,14 @@ const Activities = () => {
                           </span>
                         </div>
                       )}
-
+                      
                       <h3 className="font-bold text-lg text-gray-900 mb-2 line-clamp-2 group-hover:text-blue-600 transition-colors">
                         {activity.title}
                       </h3>
-
-                      <p className="text-sm text-gray-600 line-clamp-2 mb-3">
-                        {activity.description}
-                      </p>
+                      
+                      <p className="text-sm text-gray-600 line-clamp-2 mb-3">{activity.description}</p>
                     </div>
-
+                    
                     <div className="mt-auto pt-4 border-t border-gray-100">
                       <div className="flex items-baseline gap-2">
                         <span className="text-xl font-bold text-blue-600">

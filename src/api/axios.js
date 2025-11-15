@@ -20,8 +20,16 @@ api.interceptors.response.use(
   (res) => res,
   (err) => {
     if (err.response?.status === 401) {
-      localStorage.removeItem('token');
-      if (location.pathname !== '/login') location.href = '/login';
+      try {
+        localStorage.removeItem('token');
+        if (typeof window !== 'undefined') {
+          // Emit an event so the React app can handle SPA navigation to login
+          window.dispatchEvent(new CustomEvent('app:unauthorized'));
+        }
+      } catch (e) {
+        // fallback to full reload if event dispatching fails
+        if (location.pathname !== '/login') location.href = '/login';
+      }
     }
     return Promise.reject(err);
   }
