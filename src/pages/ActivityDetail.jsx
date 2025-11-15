@@ -1,10 +1,15 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ChevronLeftIcon, MapPinIcon, MinusIcon, PlusIcon } from '@heroicons/react/24/outline';
+import {
+  ChevronLeftIcon,
+  MapPinIcon,
+  MinusIcon,
+  PlusIcon,
+} from '@heroicons/react/24/outline';
 import { useActivity } from '../hooks/useActivities';
-import { cartService } from '../api/services/cartService';
 import { useAuth } from '../hooks/useAuth';
 import { useToast } from '../components/ui/Toast';
+import { useCart } from '../hooks/useCart';
 import Button from '../components/ui/Button';
 
 const ActivityDetail = () => {
@@ -12,9 +17,9 @@ const ActivityDetail = () => {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
   const { addToast } = useToast();
-
   const { activity, loading } = useActivity(id);
-  
+  const { addQuantityByActivity } = useCart();
+
   const [quantity, setQuantity] = useState(1);
   const [addingToCart, setAddingToCart] = useState(false);
 
@@ -23,13 +28,15 @@ const ActivityDetail = () => {
       console.log('detail activity', {
         id: activity.id,
         title: activity.title,
-        price: activity.price_discount,
-        location: `${activity.city}, ${activity.province}`
+        price: activity.price_discount ?? activity.price,
+        location: `${activity.city}, ${activity.province}`,
       });
     }
   }, [activity]);
 
   const handleAddToCart = async () => {
+    if (!activity) return;
+
     if (!isAuthenticated) {
       addToast('Please login to add items to cart', 'error');
       navigate('/login');
@@ -38,34 +45,30 @@ const ActivityDetail = () => {
 
     setAddingToCart(true);
     try {
-      await cartService.add(activity.id, quantity);
-      
-      if (quantity > 1) {
-        const cartResponse = await cartService.list();
-        const cartItems = cartResponse.data || [];
-        const addedItem = cartItems.find(item => 
-          (item.activityId || item.activity?.id) === activity.id
-        );
-        
-        if (addedItem) {
-          await cartService.update(addedItem.id, quantity);
-        }
-      }
-      
-      console.log('berhasil tambah ke cart', { activityId: activity.id, quantity });
+      // Add to existing quantity (21 + 2 = 23)
+      await addQuantityByActivity(activity.id, quantity);
+
+      console.log('addQuantityByActivity called', {
+        activityId: activity.id,
+        quantity,
+      });
       addToast(`Added ${quantity} item(s) to cart!`, 'success');
       setQuantity(1);
     } catch (error) {
       console.log('gagal tambah ke cart', error);
-      addToast(error.response?.data?.message || 'Failed to add to cart', 'error');
+      addToast(
+        error.response?.data?.message || 'Failed to add to cart',
+        'error',
+      );
     } finally {
       setAddingToCart(false);
     }
   };
 
   const handleQuantityChange = (newQuantity) => {
-    setQuantity(newQuantity);
-    console.log('quantity berubah:', newQuantity);
+    const safeQuantity = Math.max(1, newQuantity);
+    setQuantity(safeQuantity);
+    console.log('quantity berubah:', safeQuantity);
   };
 
   if (loading) {
@@ -89,7 +92,9 @@ const ActivityDetail = () => {
     return (
       <div className="min-h-screen bg-linear-to-br from-gray-50 to-blue-50 py-10 flex items-center justify-center">
         <div className="text-center">
-          <p className="text-xl font-bold text-gray-900 mb-4">Activity not found</p>
+          <p className="text-xl font-bold text-gray-900 mb-4">
+            Activity not found
+          </p>
           <button
             onClick={() => navigate('/activities')}
             className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
@@ -100,6 +105,14 @@ const ActivityDetail = () => {
       </div>
     );
   }
+
+  // sanitize main image, avoid bad base64 and use placehold.co fallback
+  const rawMainImage = activity.imageUrls?.[0] || '';
+  const mainIsBrokenData =
+    rawMainImage.startsWith('data:image/') && !rawMainImage.includes(',');
+  const mainImage = mainIsBrokenData
+    ? 'https://placehold.co/600x400?text=No+Image'
+    : rawMainImage || 'https://placehold.co/600x400?text=No+Image';
 
   return (
     <div className="min-h-screen bg-linear-to-br from-gray-50 to-blue-50 py-10">
@@ -115,26 +128,46 @@ const ActivityDetail = () => {
         <div className="grid md:grid-cols-2 gap-8">
           <div>
             <img
-              src={activity.imageUrls?.[0]}
+              src={mainImage}
               alt={activity.title}
               className="w-full h-96 object-cover rounded-2xl shadow-xl mb-4 hover:shadow-2xl transition-shadow"
+              onError={(e) => {
+                e.currentTarget.onerror = null;
+                e.currentTarget.src =
+                  'https://placehold.co/600x400?text=No+Image';
+              }}
             />
             {activity.imageUrls?.length > 1 && (
               <div className="grid grid-cols-3 gap-3">
-                {activity.imageUrls.slice(1, 4).map((url, i) => (
-                  <img
-                    key={i}
-                    src={url}
-                    alt={`${activity.title} ${i + 2}`}
-                    className="h-24 w-full object-cover rounded-xl cursor-pointer hover:opacity-80 hover:shadow-lg transition-all hover:-translate-y-1"
-                  />
-                ))}
+                {activity.imageUrls.slice(1, 4).map((url, i) => {
+                  const isBrokenData =
+                    url.startsWith('data:image/') && !url.includes(',');
+                  const thumbSrc = isBrokenData
+                    ? 'https://placehold.co/200x150?text=No+Image'
+                    : url || 'https://placehold.co/200x150?text=No+Image';
+
+                  return (
+                    <img
+                      key={i}
+                      src={thumbSrc}
+                      alt={`${activity.title} ${i + 2}`}
+                      className="h-24 w-full object-cover rounded-xl cursor-pointer hover:opacity-80 hover:shadow-lg transition-all hover:-translate-y-1"
+                      onError={(e) => {
+                        e.currentTarget.onerror = null;
+                        e.currentTarget.src =
+                          'https://placehold.co/200x150?text=No+Image';
+                      }}
+                    />
+                  );
+                })}
               </div>
             )}
           </div>
 
           <div className="bg-white rounded-2xl p-8 shadow-xl border border-gray-100">
-            <h1 className="text-4xl font-bold text-gray-900 mb-4">{activity.title}</h1>
+            <h1 className="text-4xl font-bold text-gray-900 mb-4">
+              {activity.title}
+            </h1>
 
             {(activity.city || activity.province) && (
               <div className="flex items-center gap-2 text-gray-600 mb-6">
@@ -170,8 +203,12 @@ const ActivityDetail = () => {
             </div>
 
             <div className="mb-6">
-              <h3 className="text-lg font-bold text-gray-900 mb-2">Description</h3>
-              <p className="text-gray-600 leading-relaxed">{activity.description}</p>
+              <h3 className="text-lg font-bold text-gray-900 mb-2">
+                Description
+              </h3>
+              <p className="text-gray-600 leading-relaxed">
+                {activity.description}
+              </p>
             </div>
 
             <div className="mb-6">
@@ -180,7 +217,9 @@ const ActivityDetail = () => {
               </label>
               <div className="flex items-center gap-4">
                 <button
-                  onClick={() => handleQuantityChange(Math.max(1, quantity - 1))}
+                  onClick={() =>
+                    handleQuantityChange(Math.max(1, quantity - 1))
+                  }
                   className="w-12 h-12 rounded-xl bg-white border-2 border-gray-300 hover:border-blue-600 hover:bg-blue-50 flex items-center justify-center transition-all shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
                   disabled={quantity <= 1}
                 >
