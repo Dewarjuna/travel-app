@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { 
   ClipboardDocumentListIcon,
   ChevronLeftIcon,
@@ -9,32 +9,14 @@ import {
   CalendarIcon,
   ShoppingBagIcon
 } from '@heroicons/react/24/outline';
-import { transactionService } from '../api/services/transactionService';
+import { useTransactions } from '../hooks/useTransactions.js';
 import { useToast } from '../components/ui/Toast';
 import Button from '../components/ui/Button';
 
 const Transactions = () => {
-  const [transactions, setTransactions] = useState([]);
+  const { transactions, loading } = useTransactions();
   const [selectedTransaction, setSelectedTransaction] = useState(null);
-  const [loading, setLoading] = useState(true);
   const { addToast } = useToast();
-
-  useEffect(() => {
-    fetchTransactions();
-  }, []);
-
-  const fetchTransactions = async () => {
-    setLoading(true);
-    try {
-      const res = await transactionService.myList();
-      setTransactions(res.data || []);
-    } catch (error) {
-      console.error('Error loading transactions:', error);
-      addToast('Failed to load transactions', 'error');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const getStatusConfig = (status) => {
     const configs = {
@@ -185,11 +167,11 @@ const Transactions = () => {
                     </div>
                     <div className="text-right">
                       <p className="font-bold text-xl text-blue-600">
-                        Rp {(item.price_discount * item.quantity)?.toLocaleString('id-ID')}
+                        Rp {(item.price_discount * item.quantity).toLocaleString('id-ID')}
                       </p>
                       {item.price > item.price_discount && (
                         <p className="text-sm text-gray-400 line-through">
-                          Rp {(item.price * item.quantity)?.toLocaleString('id-ID')}
+                          Rp {(item.price * item.quantity).toLocaleString('id-ID')}
                         </p>
                       )}
                     </div>
@@ -258,15 +240,11 @@ const Transactions = () => {
                   </div>
                   <div className="p-3 bg-gray-50 rounded-xl">
                     <p className="text-xs text-gray-600 font-semibold mb-1">Items</p>
-                    <p className="font-bold text-gray-900">
-                      {tx.transaction_items?.length || 0} items
-                    </p>
+                    <p className="font-bold text-gray-900">{tx.transaction_items?.length || 0} items</p>
                   </div>
                   <div className="p-3 bg-linear-to-br from-blue-50 to-blue-100 rounded-xl">
                     <p className="text-xs text-blue-700 font-semibold mb-1">Total</p>
-                    <p className="font-bold text-xl text-blue-700">
-                      Rp {tx.totalAmount?.toLocaleString('id-ID')}
-                    </p>
+                    <p className="font-bold text-xl text-blue-700">Rp {tx.totalAmount?.toLocaleString('id-ID')}</p>
                   </div>
                 </div>
               </button>

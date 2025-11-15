@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ChevronLeftIcon, MapPinIcon, MinusIcon, PlusIcon } from '@heroicons/react/24/outline';
-import { activityService } from '../api/services/activityService';
+import { useActivity } from '../hooks/useActivities';
 import { cartService } from '../api/services/cartService';
 import { useAuth } from '../hooks/useAuth';
 import { useToast } from '../components/ui/Toast';
@@ -9,25 +9,25 @@ import Button from '../components/ui/Button';
 
 const ActivityDetail = () => {
   const { id } = useParams();
-  const [activity, setActivity] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [quantity, setQuantity] = useState(1);
-  const [addingToCart, setAddingToCart] = useState(false);
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
   const { addToast } = useToast();
 
+  const { activity, loading } = useActivity(id);
+  
+  const [quantity, setQuantity] = useState(1);
+  const [addingToCart, setAddingToCart] = useState(false);
+
   useEffect(() => {
-    activityService
-      .byId(id)
-      .then(r => setActivity(r.data || r))
-      .catch(error => {
-        console.error('Error loading activity:', error);
-        addToast('Activity not found', 'error');
-        navigate('/activities');
-      })
-      .finally(() => setLoading(false));
-  }, [id]);
+    if (activity) {
+      console.log('detail activity', {
+        id: activity.id,
+        title: activity.title,
+        price: activity.price_discount,
+        location: `${activity.city}, ${activity.province}`
+      });
+    }
+  }, [activity]);
 
   const handleAddToCart = async () => {
     if (!isAuthenticated) {
@@ -52,14 +52,20 @@ const ActivityDetail = () => {
         }
       }
       
+      console.log('berhasil tambah ke cart', { activityId: activity.id, quantity });
       addToast(`Added ${quantity} item(s) to cart!`, 'success');
       setQuantity(1);
     } catch (error) {
-      console.error('Add to cart error:', error);
+      console.log('gagal tambah ke cart', error);
       addToast(error.response?.data?.message || 'Failed to add to cart', 'error');
     } finally {
       setAddingToCart(false);
     }
+  };
+
+  const handleQuantityChange = (newQuantity) => {
+    setQuantity(newQuantity);
+    console.log('quantity berubah:', newQuantity);
   };
 
   if (loading) {
@@ -79,7 +85,21 @@ const ActivityDetail = () => {
     );
   }
 
-  if (!activity) return null;
+  if (!activity) {
+    return (
+      <div className="min-h-screen bg-linear-to-br from-gray-50 to-blue-50 py-10 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-xl font-bold text-gray-900 mb-4">Activity not found</p>
+          <button
+            onClick={() => navigate('/activities')}
+            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Back to Activities
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-linear-to-br from-gray-50 to-blue-50 py-10">
@@ -160,7 +180,7 @@ const ActivityDetail = () => {
               </label>
               <div className="flex items-center gap-4">
                 <button
-                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                  onClick={() => handleQuantityChange(Math.max(1, quantity - 1))}
                   className="w-12 h-12 rounded-xl bg-white border-2 border-gray-300 hover:border-blue-600 hover:bg-blue-50 flex items-center justify-center transition-all shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
                   disabled={quantity <= 1}
                 >
@@ -170,7 +190,7 @@ const ActivityDetail = () => {
                   {quantity}
                 </span>
                 <button
-                  onClick={() => setQuantity(quantity + 1)}
+                  onClick={() => handleQuantityChange(quantity + 1)}
                   className="w-12 h-12 rounded-xl bg-white border-2 border-gray-300 hover:border-blue-600 hover:bg-blue-50 flex items-center justify-center transition-all shadow-sm hover:shadow-md"
                 >
                   <PlusIcon className="w-5 h-5" />
