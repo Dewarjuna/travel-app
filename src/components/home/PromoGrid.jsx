@@ -1,7 +1,6 @@
 import { useEffect } from 'react';
 import { TagIcon } from '@heroicons/react/24/outline';
 import { usePromos } from '../../hooks/usePromos';
-const fallbackUrl = '/fallback-promo.jpg';
 const PromoGrid = () => {
   const { promos, loading } = usePromos();
   useEffect(() => {
@@ -48,9 +47,9 @@ const PromoGrid = () => {
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                       loading="lazy"
                       onError={e => {
-                        if (!e.target.src.endsWith(fallbackUrl)) {
-                          e.target.src = fallbackUrl;
-                        }
+                        e.currentTarget.onerror = null;
+                        e.currentTarget.src =
+                          'https://placehold.co/600x400?text=No+Image';
                       }}
                     />
                     <div className="absolute inset-0 bg-linear-to-t from-black/40 to-transparent" />

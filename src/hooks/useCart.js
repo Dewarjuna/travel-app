@@ -200,7 +200,7 @@ export function useCart() {
     addToCart,              // basic add-one-row helper (increment by API default)
     updateCartQuantity,     // set exact quantity by cartId (Cart page +/-)
     removeFromCart,         // remove by cartId
-    setCartQuantityByActivity, // set exact quantity by activityId (optional)
+    setCartQuantityByActivity, // set exact quantity by activityId
     addQuantityByActivity,  // add to existing quantity (ActivityDetail)
   };
 }

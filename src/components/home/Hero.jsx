@@ -72,6 +72,11 @@ const Hero = () => {
                       src={banner.imageUrl}
                       alt={banner.name}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      onError={(e) => {
+                      e.currentTarget.onerror = null;
+                      e.currentTarget.src =
+                        'https://placehold.co/600x400?text=No+Image';
+                      }}
                       loading="lazy"
                     />
                     <div className="absolute inset-0 bg-linear-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
