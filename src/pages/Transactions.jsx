@@ -159,6 +159,11 @@ const Transactions = () => {
                         src={item.imageUrls[0]}
                         alt={item.title}
                         className="w-20 h-20 object-cover rounded-xl shrink-0 shadow-sm"
+                        onError={(e) => {
+                        e.currentTarget.onerror = null;
+                        e.currentTarget.src =
+                          'https://placehold.co/600x400?text=No+Image';
+                        }}
                       />
                     )}
                     <div className="flex-1 min-w-0">

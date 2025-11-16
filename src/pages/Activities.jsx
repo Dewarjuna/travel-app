@@ -184,6 +184,11 @@ const Activities = () => {
                       src={activity.imageUrls?.[0]}
                       alt={activity.title}
                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                      onError={(e) => {
+                      e.currentTarget.onerror = null;
+                      e.currentTarget.src =
+                        'https://placehold.co/600x400?text=No+Image';
+                      }}
                       loading="lazy"
                     />
                     <div className="absolute inset-0 bg-linear-to-t from-black/60 via-black/20 to-transparent" />

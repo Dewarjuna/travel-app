@@ -122,8 +122,10 @@ const Cart = () => {
                         alt={title}
                         className="w-28 h-28 object-cover rounded-xl shrink-0 shadow-sm"
                         onError={(e) => {
-                          e.target.src = '';
-                        }}
+                      e.currentTarget.onerror = null;
+                      e.currentTarget.src =
+                        'https://placehold.co/600x400?text=No+Image';
+                      }}
                       />
                       <div className="flex-1 min-w-0">
                         <h3 className="font-bold text-xl text-gray-900 mb-2 line-clamp-2">{title}</h3>
