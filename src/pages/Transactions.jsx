@@ -12,35 +12,59 @@ import {
 import { useTransactions } from '../hooks/useTransactions.js';
 import { useToast } from '../components/ui/Toast';
 import Button from '../components/ui/Button';
+import fallbackimg from '../assets/candi.jpg';
 
 const Transactions = () => {
   const { transactions, loading } = useTransactions();
   const [selectedTransaction, setSelectedTransaction] = useState(null);
   const { addToast } = useToast();
 
+  // Helper function to get the correct price
+  const getItemPrice = (item) => {
+    // If price_discount is null or undefined, use price
+    if (item.price_discount == null) {
+      return item.price;
+    }
+    // If price_discount is higher than price (data error), use price
+    if (item.price_discount > item.price) {
+      return item.price;
+    }
+    // Otherwise use the discounted price
+    return item.price_discount;
+  };
+
+  // Calculate accurate total from items
+  const calculateTotal = (items) => {
+    if (!items || items.length === 0) return 0;
+    return items.reduce((sum, item) => {
+      const price = getItemPrice(item);
+      return sum + (price * (item.quantity || 1));
+    }, 0);
+  };
+
   const getStatusConfig = (status) => {
     const configs = {
       success: {
-        bg: 'bg-linear-to-r from-green-500 to-green-600',
+        bg: 'bg-gradient-to-r from-green-500 to-green-600',
         text: 'text-white',
         icon: CheckCircleIcon,
         label: 'Completed'
       },
       pending: {
-        bg: 'bg-linear-to-r from-yellow-500 to-yellow-600',
+        bg: 'bg-gradient-to-r from-yellow-500 to-yellow-600',
         text: 'text-white',
         icon: ClockIcon,
         label: 'Pending'
       },
       failed: {
-        bg: 'bg-linear-to-r from-red-500 to-red-600',
+        bg: 'bg-gradient-to-r from-red-500 to-red-600',
         text: 'text-white',
         icon: XCircleIcon,
         label: 'Failed'
       },
     };
     return configs[status] || {
-      bg: 'bg-linear-to-r from-gray-500 to-gray-600',
+      bg: 'bg-gradient-to-r from-gray-500 to-gray-600',
       text: 'text-white',
       icon: ClockIcon,
       label: status
@@ -94,6 +118,8 @@ const Transactions = () => {
   if (selectedTransaction) {
     const statusConfig = getStatusConfig(selectedTransaction.status);
     const StatusIcon = statusConfig.icon;
+    // Calculate correct total
+    const calculatedTotal = calculateTotal(selectedTransaction.transaction_items);
 
     return (
       <div className="min-h-screen bg-linear-to-br from-gray-50 to-blue-50 py-10">
@@ -152,36 +178,41 @@ const Transactions = () => {
                 <h2 className="text-xl font-bold text-gray-900">Order Items</h2>
               </div>
               <div className="space-y-3">
-                {selectedTransaction.transaction_items?.map((item, i) => (
-                  <div key={i} className="flex gap-5 p-5 bg-gray-50 rounded-xl hover:shadow-md transition-shadow">
-                    {item.imageUrls?.[0] && (
-                      <img
-                        src={item.imageUrls[0]}
-                        alt={item.title}
-                        className="w-20 h-20 object-cover rounded-xl shrink-0 shadow-sm"
-                        onError={(e) => {
-                        e.currentTarget.onerror = null;
-                        e.currentTarget.src =
-                          'https://placehold.co/600x400?text=No+Image';
-                        }}
-                      />
-                    )}
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-bold text-lg text-gray-900 mb-2">{item.title}</h3>
-                      <p className="text-sm text-gray-600 font-medium">Quantity: {item.quantity}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-bold text-xl text-blue-600">
-                        Rp {(item.price_discount * item.quantity).toLocaleString('id-ID')}
-                      </p>
-                      {item.price > item.price_discount && (
-                        <p className="text-sm text-gray-400 line-through">
-                          Rp {(item.price * item.quantity).toLocaleString('id-ID')}
-                        </p>
+                {selectedTransaction.transaction_items?.map((item, i) => {
+                  const itemPrice = getItemPrice(item);
+                  const itemTotal = itemPrice * (item.quantity || 1);
+                  const hasDiscount = item.price_discount != null && item.price_discount < item.price;
+
+                  return (
+                    <div key={i} className="flex gap-5 p-5 bg-gray-50 rounded-xl hover:shadow-md transition-shadow">
+                      {item.imageUrls?.[0] && (
+                        <img
+                          src={item.imageUrls[0]}
+                          alt={item.title}
+                          className="w-20 h-20 object-cover rounded-xl shrink-0 shadow-sm"
+                          onError={(e) => {
+                            e.currentTarget.onerror = null;
+                            e.currentTarget.src = fallbackimg;
+                          }}
+                        />
                       )}
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-bold text-lg text-gray-900 mb-2">{item.title}</h3>
+                        <p className="text-sm text-gray-600 font-medium">Quantity: {item.quantity || 1}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-bold text-xl text-blue-600">
+                          Rp {itemTotal.toLocaleString('id-ID')}
+                        </p>
+                        {hasDiscount && (
+                          <p className="text-sm text-gray-400 line-through">
+                            Rp {(item.price * (item.quantity || 1)).toLocaleString('id-ID')}
+                          </p>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
 
@@ -189,7 +220,7 @@ const Transactions = () => {
               <div className="flex justify-between items-center p-4 bg-linear-to-r from-blue-50 to-blue-100 rounded-xl">
                 <span className="text-xl font-bold text-gray-700">Total Amount</span>
                 <span className="text-3xl font-black bg-linear-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent">
-                  Rp {selectedTransaction.totalAmount?.toLocaleString('id-ID')}
+                  Rp {calculatedTotal.toLocaleString('id-ID')}
                 </span>
               </div>
             </div>
@@ -218,6 +249,8 @@ const Transactions = () => {
           {transactions.map(tx => {
             const statusConfig = getStatusConfig(tx.status);
             const StatusIcon = statusConfig.icon;
+            // ✨ Calculate correct total for list view
+            const calculatedTotal = calculateTotal(tx.transaction_items);
 
             return (
               <button
@@ -249,7 +282,7 @@ const Transactions = () => {
                   </div>
                   <div className="p-3 bg-linear-to-br from-blue-50 to-blue-100 rounded-xl">
                     <p className="text-xs text-blue-700 font-semibold mb-1">Total</p>
-                    <p className="font-bold text-xl text-blue-700">Rp {tx.totalAmount?.toLocaleString('id-ID')}</p>
+                    <p className="font-bold text-xl text-blue-700">Rp {calculatedTotal.toLocaleString('id-ID')}</p>
                   </div>
                 </div>
               </button>

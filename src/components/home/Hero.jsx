@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useNavigate, createSearchParams } from 'react-router-dom';
 import { useBanners } from '../../hooks/useBanners';
+import Button from '../ui/Button';
+import fallbackimg from '../../assets/candi.jpg';
 
 const Hero = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -41,12 +43,9 @@ const Hero = () => {
                 onChange={(e) => setSearchQuery(e.target.value)}
                 aria-label="Search activities"
               />
-              <button
-                type="submit"
-                className="px-8 py-3.5 bg-primary hover:bg-primary/90 text-white font-semibold rounded-lg shadow-sm hover:shadow-md transition-all duration-200 active:scale-95"
-              >
+              <Button type="submit">
                 Search
-              </button>
+              </Button>
             </form>
           </div>
 
@@ -73,9 +72,8 @@ const Hero = () => {
                       alt={banner.name}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                       onError={(e) => {
-                      e.currentTarget.onerror = null;
-                      e.currentTarget.src =
-                        'https://placehold.co/600x400?text=No+Image';
+                        e.currentTarget.onerror = null;
+                        e.currentTarget.src = fallbackimg;
                       }}
                       loading="lazy"
                     />
