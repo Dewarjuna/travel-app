@@ -24,12 +24,30 @@ const ActivityDetail = () => {
   const [quantity, setQuantity] = useState(1);
   const [addingToCart, setAddingToCart] = useState(false);
 
+  // Helper to get the correct price
+  const getActivityPrice = (activity) => {
+    if (!activity) return 0;
+    if (activity.price_discount == null) {
+      return activity.price;
+    }
+    if (activity.price_discount > activity.price) {
+      return activity.price;
+    }
+    return activity.price_discount;
+  };
+
+  // ✨ Check if valid discount exists
+  const hasDiscount = (activity) => {
+    if (!activity) return false;
+    return activity.price_discount != null && activity.price_discount < activity.price;
+  };
+
   useEffect(() => {
     if (activity) {
       console.log('detail activity', {
         id: activity.id,
         title: activity.title,
-        price: activity.price_discount ?? activity.price,
+        price: getActivityPrice(activity),
         location: `${activity.city}, ${activity.province}`,
       });
     }
@@ -115,6 +133,10 @@ const ActivityDetail = () => {
     ? fallbackimg
     : rawMainImage || fallbackimg;
 
+  // Get display price and discount status
+  const displayPrice = getActivityPrice(activity);
+  const showDiscount = hasDiscount(activity);
+
   return (
     <div className="min-h-screen bg-linear-to-br from-gray-50 to-blue-50 py-10">
       <div className="container mx-auto px-4 max-w-6xl">
@@ -134,8 +156,7 @@ const ActivityDetail = () => {
               className="w-full h-96 object-cover rounded-2xl shadow-xl mb-4 hover:shadow-2xl transition-shadow"
               onError={(e) => {
                 e.currentTarget.onerror = null;
-                e.currentTarget.src =
-                  fallbackimg;
+                e.currentTarget.src = fallbackimg;
               }}
             />
             {activity.imageUrls?.length > 1 && (
@@ -184,9 +205,9 @@ const ActivityDetail = () => {
             <div className="mb-6 pb-6 border-b border-gray-200">
               <div className="flex items-baseline gap-3 mb-2">
                 <span className="text-4xl font-bold bg-linear-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent">
-                  Rp {activity.price_discount?.toLocaleString('id-ID')}
+                  Rp {displayPrice?.toLocaleString('id-ID')}
                 </span>
-                {activity.price_discount < activity.price && (
+                {showDiscount && (
                   <span className="text-xl text-gray-400 line-through">
                     Rp {activity.price?.toLocaleString('id-ID')}
                   </span>

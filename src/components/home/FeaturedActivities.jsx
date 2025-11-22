@@ -6,9 +6,27 @@ import fallbackimg from '../../assets/candi.jpg';
 const FeaturedActivities = () => {
   const { activities, loading } = useActivities();
 
-  const calculateDiscount = (price, discountPrice) => {
-    if (!price || !discountPrice || price === discountPrice) return null;
-    return Math.round(((price - discountPrice) / price) * 100);
+  // Helper to get the correct price
+  const getActivityPrice = (activity) => {
+    if (activity.price_discount == null) {
+      return activity.price;
+    }
+    if (activity.price_discount > activity.price) {
+      return activity.price;
+    }
+    return activity.price_discount;
+  };
+
+  // ✨ Fixed discount calculation
+  const calculateDiscount = (activity) => {
+    if (!activity.price || activity.price_discount == null) return null;
+    if (activity.price_discount >= activity.price) return null;
+    return Math.round(((activity.price - activity.price_discount) / activity.price) * 100);
+  };
+
+  // ✨ Check if valid discount exists
+  const hasDiscount = (activity) => {
+    return activity.price_discount != null && activity.price_discount < activity.price;
   };
 
   return (
@@ -40,7 +58,9 @@ const FeaturedActivities = () => {
         ) : (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 items-stretch">
             {activities.slice(0, 8).map((activity) => {
-              const discount = calculateDiscount(activity.price, activity.price_discount);
+              const discount = calculateDiscount(activity);
+              const displayPrice = getActivityPrice(activity);
+              const showDiscount = hasDiscount(activity);
 
               return (
                 <Link
@@ -102,9 +122,9 @@ const FeaturedActivities = () => {
                     <div className="mt-auto pt-3 border-t border-gray-100">
                       <div className="flex items-center gap-2">
                         <span className="text-lg font-bold text-primary">
-                          Rp {activity.price_discount?.toLocaleString('id-ID')}
+                          Rp {displayPrice?.toLocaleString('id-ID')}
                         </span>
-                        {activity.price_discount < activity.price && (
+                        {showDiscount && (
                           <span className="text-sm text-gray-400 line-through">
                             Rp {activity.price?.toLocaleString('id-ID')}
                           </span>

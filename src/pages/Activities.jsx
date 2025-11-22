@@ -75,9 +75,27 @@ const Activities = () => {
     setSearchParams(newParams);
   };
 
-  const calculateDiscount = (price, discountPrice) => {
-    if (!price || !discountPrice || price === discountPrice) return null;
-    return Math.round(((price - discountPrice) / price) * 100);
+  // Helper to get the correct price
+  const getActivityPrice = (activity) => {
+    if (activity.price_discount == null) {
+      return activity.price;
+    }
+    if (activity.price_discount > activity.price) {
+      return activity.price;
+    }
+    return activity.price_discount;
+  };
+
+  // ✨ Fixed discount calculation
+  const calculateDiscount = (activity) => {
+    if (!activity.price || activity.price_discount == null) return null;
+    if (activity.price_discount >= activity.price) return null;
+    return Math.round(((activity.price - activity.price_discount) / activity.price) * 100);
+  };
+
+  // ✨ Check if valid discount exists
+  const hasDiscount = (activity) => {
+    return activity.price_discount != null && activity.price_discount < activity.price;
   };
 
   const loading = activitiesLoading || categoriesLoading;
@@ -172,7 +190,9 @@ const Activities = () => {
         ) : (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {filteredActivities.map(activity => {
-              const discount = calculateDiscount(activity.price, activity.price_discount);
+              const discount = calculateDiscount(activity);
+              const displayPrice = getActivityPrice(activity);
+              const showDiscount = hasDiscount(activity);
 
               return (
                 <Link
@@ -186,8 +206,8 @@ const Activities = () => {
                       alt={activity.title}
                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                       onError={(e) => {
-                      e.currentTarget.onerror = null;
-                      e.currentTarget.src = fallbackimg;
+                        e.currentTarget.onerror = null;
+                        e.currentTarget.src = fallbackimg;
                       }}
                       loading="lazy"
                     />
@@ -230,9 +250,9 @@ const Activities = () => {
                     <div className="mt-auto pt-4 border-t border-gray-100">
                       <div className="flex items-baseline gap-2">
                         <span className="text-xl font-bold text-blue-600">
-                          Rp {activity.price_discount?.toLocaleString('id-ID')}
+                          Rp {displayPrice?.toLocaleString('id-ID')}
                         </span>
-                        {activity.price_discount < activity.price && (
+                        {showDiscount && (
                           <span className="text-sm text-gray-400 line-through">
                             Rp {activity.price?.toLocaleString('id-ID')}
                           </span>
