@@ -1,9 +1,12 @@
-import { useMemo, useEffect } from 'react';
+import { useMemo, useEffect, useState } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { MapPinIcon, StarIcon } from '@heroicons/react/24/outline';
 import { useActivities } from '../hooks/useActivities';
 import { useCategories } from '../hooks/useCategories';
+import { useInView } from 'react-intersection-observer';
 import fallbackimg from '../assets/candi.jpg';
+
+const ITEMS_PER_LOAD = 12;
 
 const Activities = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -13,6 +16,32 @@ const Activities = () => {
 
   const { activities: allActivities, loading: activitiesLoading } = useActivities(categoryId);
   const { categories, loading: categoriesLoading } = useCategories();
+
+  // Filtered activities based on search query
+  const filteredActivities = useMemo(() => {
+    if (!searchQuery) {
+      return allActivities;
+    }
+    return allActivities.filter(activity =>
+      activity.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      activity.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      activity.city?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      activity.province?.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [searchQuery, allActivities]);
+
+  // Infinite scroll state
+  const [visibleCount, setVisibleCount] = useState(ITEMS_PER_LOAD);
+
+  // Intersection Observer: useInView for infinite scroll
+  const { ref, inView } = useInView();
+
+  // Load more when in view
+  useEffect(() => {
+    if (inView && visibleCount < filteredActivities.length) {
+      setVisibleCount(c => Math.min(c + ITEMS_PER_LOAD, filteredActivities.length));
+    }
+  }, [inView, filteredActivities.length, visibleCount]);
 
   useEffect(() => {
     console.log('semua activities', {
@@ -30,31 +59,12 @@ const Activities = () => {
     });
   }, [categories, categoriesLoading]);
 
-  const filteredActivities = useMemo(() => {
-    if (!searchQuery) {
-      console.log('activities no filter');
-      return allActivities;
-    }
-    
-    const filtered = allActivities.filter(activity =>
-      activity.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      activity.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      activity.city?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      activity.province?.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-    
-    console.log('semua activities difilter', {
-      searchQuery,
-      originalCount: allActivities.length,
-      filteredCount: filtered.length,
-      filteredActivities: filtered.map(a => a.title)
-    });
-    
-    return filtered;
-  }, [searchQuery, allActivities]);
+  // Reset scroll on category/search change
+  useEffect(() => {
+    setVisibleCount(ITEMS_PER_LOAD);
+  }, [categoryId, searchQuery]);
 
   const handleCategoryChange = (value) => {
-    console.log('kategori berubah:', value || 'Semua Kategori');
     const newParams = new URLSearchParams(searchParams.toString());
     if (value) {
       newParams.set('category', value);
@@ -65,7 +75,6 @@ const Activities = () => {
   };
 
   const handleSearchChange = (value) => {
-    console.log('search berubah:', value || 'kosong');
     const newParams = new URLSearchParams(searchParams.toString());
     if (value) {
       newParams.set('q', value);
@@ -86,19 +95,19 @@ const Activities = () => {
     return activity.price_discount;
   };
 
-  // ✨ Fixed discount calculation
   const calculateDiscount = (activity) => {
     if (!activity.price || activity.price_discount == null) return null;
     if (activity.price_discount >= activity.price) return null;
     return Math.round(((activity.price - activity.price_discount) / activity.price) * 100);
   };
 
-  // ✨ Check if valid discount exists
+  // Check if valid discount exists
   const hasDiscount = (activity) => {
     return activity.price_discount != null && activity.price_discount < activity.price;
   };
 
   const loading = activitiesLoading || categoriesLoading;
+  const visibleActivities = filteredActivities.slice(0, visibleCount);
 
   return (
     <div className="min-h-screen bg-linear-to-br from-gray-50 to-blue-50">
@@ -188,82 +197,87 @@ const Activities = () => {
             </button>
           </div>
         ) : (
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {filteredActivities.map(activity => {
-              const discount = calculateDiscount(activity);
-              const displayPrice = getActivityPrice(activity);
-              const showDiscount = hasDiscount(activity);
+          <>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {visibleActivities.map(activity => {
+                const discount = calculateDiscount(activity);
+                const displayPrice = getActivityPrice(activity);
+                const showDiscount = hasDiscount(activity);
 
-              return (
-                <Link
-                  key={activity.id}
-                  to={`/activities/${activity.id}`}
-                  className="group flex flex-col h-full bg-white rounded-2xl shadow-md hover:shadow-2xl border border-gray-100 overflow-hidden transition-all duration-300 hover:-translate-y-1"
-                >
-                  <div className="relative h-48 overflow-hidden bg-gray-100 shrink-0">
-                    <img
-                      src={activity.imageUrls?.[0]}
-                      alt={activity.title}
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                      onError={(e) => {
-                        e.currentTarget.onerror = null;
-                        e.currentTarget.src = fallbackimg;
-                      }}
-                      loading="lazy"
-                    />
-                    <div className="absolute inset-0 bg-linear-to-t from-black/60 via-black/20 to-transparent" />
-                    
-                    {discount && (
-                      <div className="absolute top-3 left-3 bg-linear-to-r from-red-500 to-red-600 text-white px-3 py-1.5 rounded-lg text-sm font-bold shadow-lg">
-                        {discount}% OFF
-                      </div>
-                    )}
-                    
-                    {activity.rating && (
-                      <div className="absolute top-3 right-3 bg-white/95 backdrop-blur-sm px-2.5 py-1.5 rounded-lg flex items-center gap-1 shadow-md">
-                        <StarIcon className="w-4 h-4 text-yellow-500 fill-yellow-500" />
-                        <span className="text-sm font-bold text-gray-900">{activity.rating}</span>
-                      </div>
-                    )}
-                  </div>
-                  
-                  <div className="flex-1 flex flex-col p-5">
-                    <div className="flex-1">
-                      {(activity.city || activity.province) && (
-                        <div className="flex items-center gap-1 text-xs text-gray-500 mb-2">
-                          <MapPinIcon className="w-3.5 h-3.5" />
-                          <span className="line-clamp-1">
-                            {activity.city && activity.province
-                              ? `${activity.city}, ${activity.province}`
-                              : activity.city || activity.province}
-                          </span>
+                return (
+                  <Link
+                    key={activity.id}
+                    to={`/activities/${activity.id}`}
+                    className="group flex flex-col h-full bg-white rounded-2xl shadow-md hover:shadow-2xl border border-gray-100 overflow-hidden transition-all duration-300 hover:-translate-y-1"
+                  >
+                    <div className="relative h-48 overflow-hidden bg-gray-100 shrink-0">
+                      <img
+                        src={activity.imageUrls?.[0]}
+                        alt={activity.title}
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                        onError={(e) => {
+                          e.currentTarget.onerror = null;
+                          e.currentTarget.src = fallbackimg;
+                        }}
+                        loading="lazy"
+                      />
+                      <div className="absolute inset-0 bg-linear-to-t from-black/60 via-black/20 to-transparent" />
+
+                      {discount && (
+                        <div className="absolute top-3 left-3 bg-linear-to-r from-red-500 to-red-600 text-white px-3 py-1.5 rounded-lg text-sm font-bold shadow-lg">
+                          {discount}% OFF
                         </div>
                       )}
-                      
-                      <h3 className="font-bold text-lg text-gray-900 mb-2 line-clamp-2 group-hover:text-blue-600 transition-colors">
-                        {activity.title}
-                      </h3>
-                      
-                      <p className="text-sm text-gray-600 line-clamp-2 mb-3">{activity.description}</p>
+
+                      {activity.rating && (
+                        <div className="absolute top-3 right-3 bg-white/95 backdrop-blur-sm px-2.5 py-1.5 rounded-lg flex items-center gap-1 shadow-md">
+                          <StarIcon className="w-4 h-4 text-yellow-500 fill-yellow-500" />
+                          <span className="text-sm font-bold text-gray-900">{activity.rating}</span>
+                        </div>
+                      )}
                     </div>
-                    
-                    <div className="mt-auto pt-4 border-t border-gray-100">
-                      <div className="flex items-baseline gap-2">
-                        <span className="text-xl font-bold text-blue-600">
-                          Rp {displayPrice?.toLocaleString('id-ID')}
-                        </span>
-                        {showDiscount && (
-                          <span className="text-sm text-gray-400 line-through">
-                            Rp {activity.price?.toLocaleString('id-ID')}
-                          </span>
+                    <div className="flex-1 flex flex-col p-5">
+                      <div className="flex-1">
+                        {(activity.city || activity.province) && (
+                          <div className="flex items-center gap-1 text-xs text-gray-500 mb-2">
+                            <MapPinIcon className="w-3.5 h-3.5" />
+                            <span className="line-clamp-1">
+                              {activity.city && activity.province
+                                ? `${activity.city}, ${activity.province}`
+                                : activity.city || activity.province}
+                            </span>
+                          </div>
                         )}
+
+                        <h3 className="font-bold text-lg text-gray-900 mb-2 line-clamp-2 group-hover:text-blue-600 transition-colors">
+                          {activity.title}
+                        </h3>
+                        <p className="text-sm text-gray-600 line-clamp-2 mb-3">{activity.description}</p>
+                      </div>
+                      <div className="mt-auto pt-4 border-t border-gray-100">
+                        <div className="flex items-baseline gap-2">
+                          <span className="text-xl font-bold text-blue-600">
+                            Rp {displayPrice?.toLocaleString('id-ID')}
+                          </span>
+                          {showDiscount && (
+                            <span className="text-sm text-gray-400 line-through">
+                              Rp {activity.price?.toLocaleString('id-ID')}
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </Link>
-              );
-            })}
-          </div>
+                  </Link>
+                );
+              })}
+            </div>
+            {/* Infinite Scroll Sentinel */}
+            {visibleCount < filteredActivities.length && (
+              <div ref={ref} className="py-8 flex justify-center items-center text-blue-500 animate-pulse">
+                Loading more activities...
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>

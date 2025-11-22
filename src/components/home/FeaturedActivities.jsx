@@ -1,12 +1,24 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronRightIcon, MapPinIcon, StarIcon } from '@heroicons/react/24/outline';
 import { useActivities } from '../../hooks/useActivities';
+import { usePagination } from '../../hooks/usePagination';
+import Pagination from '../ui/Pagination';
 import fallbackimg from '../../assets/candi.jpg';
 
 const FeaturedActivities = () => {
   const { activities, loading } = useActivities();
 
-  // Helper to get the correct price
+  // Pagination logic (8 cards per page)
+  const itemsPerPage = 8;
+  const {
+    currentItems,
+    currentPage,
+    totalPages,
+    goToPage
+  } = usePagination(activities, itemsPerPage);
+
+  // Helper functions for price/discount logic
   const getActivityPrice = (activity) => {
     if (activity.price_discount == null) {
       return activity.price;
@@ -17,14 +29,12 @@ const FeaturedActivities = () => {
     return activity.price_discount;
   };
 
-  // ✨ Fixed discount calculation
   const calculateDiscount = (activity) => {
     if (!activity.price || activity.price_discount == null) return null;
     if (activity.price_discount >= activity.price) return null;
     return Math.round(((activity.price - activity.price_discount) / activity.price) * 100);
   };
 
-  // ✨ Check if valid discount exists
   const hasDiscount = (activity) => {
     return activity.price_discount != null && activity.price_discount < activity.price;
   };
@@ -48,7 +58,7 @@ const FeaturedActivities = () => {
 
         {loading ? (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {Array.from({ length: 8 }).map((_, index) => (
+            {Array.from({ length: itemsPerPage }).map((_, index) => (
               <div
                 key={index}
                 className="h-80 rounded-xl bg-linear-to-br from-gray-100 to-gray-200 animate-pulse"
@@ -56,86 +66,96 @@ const FeaturedActivities = () => {
             ))}
           </div>
         ) : (
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 items-stretch">
-            {activities.slice(0, 8).map((activity) => {
-              const discount = calculateDiscount(activity);
-              const displayPrice = getActivityPrice(activity);
-              const showDiscount = hasDiscount(activity);
+          <>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 items-stretch">
+              {currentItems.map((activity) => {
+                const discount = calculateDiscount(activity);
+                const displayPrice = getActivityPrice(activity);
+                const showDiscount = hasDiscount(activity);
 
-              return (
-                <Link
-                  key={activity.id}
-                  to={`/activities/${activity.id}`}
-                  className="group flex flex-col h-full bg-white rounded-xl shadow-sm hover:shadow-xl border border-gray-100 overflow-hidden transition-all duration-300 hover:-translate-y-1"
-                >
-                  <div className="relative h-48 overflow-hidden bg-gray-100 shrink-0">
-                    <img
-                      src={activity.imageUrls?.[0]}
-                      alt={activity.title}
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                      onError={(e) => {
-                        e.currentTarget.onerror = null;
-                        e.currentTarget.src = fallbackimg;
-                      }}
-                      loading="lazy"
-                    />
-                    <div className="absolute inset-0 bg-linear-to-t from-black/50 to-transparent" />
+                return (
+                  <Link
+                    key={activity.id}
+                    to={`/activities/${activity.id}`}
+                    className="group flex flex-col h-full bg-white rounded-xl shadow-sm hover:shadow-xl border border-gray-100 overflow-hidden transition-all duration-300 hover:-translate-y-1"
+                  >
+                    <div className="relative h-48 overflow-hidden bg-gray-100 shrink-0">
+                      <img
+                        src={activity.imageUrls?.[0]}
+                        alt={activity.title}
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                        onError={(e) => {
+                          e.currentTarget.onerror = null;
+                          e.currentTarget.src = fallbackimg;
+                        }}
+                        loading="lazy"
+                      />
+                      <div className="absolute inset-0 bg-linear-to-t from-black/50 to-transparent" />
 
-                    {discount && (
-                      <div className="absolute top-3 left-3 bg-red-500 text-white px-2 py-1 rounded-lg text-xs font-bold shadow-lg">
-                        {discount}% OFF
-                      </div>
-                    )}
-
-                    {activity.rating && (
-                      <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-lg flex items-center gap-1 shadow-sm">
-                        <StarIcon className="w-4 h-4 text-yellow-500 fill-yellow-500" />
-                        <span className="text-xs font-semibold text-gray-900">
-                          {activity.rating}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="flex-1 flex flex-col p-4">
-                    <div className="flex-1">
-                      {(activity.city || activity.province) && (
-                        <div className="flex items-center gap-1 text-xs text-gray-500 mb-2">
-                          <MapPinIcon className="w-3 h-3" />
-                          <span className="line-clamp-1">
-                            {activity.city && activity.province
-                              ? `${activity.city}, ${activity.province}`
-                              : activity.city || activity.province}
-                          </span>
+                      {discount && (
+                        <div className="absolute top-3 left-3 bg-red-500 text-white px-2 py-1 rounded-lg text-xs font-bold shadow-lg">
+                          {discount}% OFF
                         </div>
                       )}
 
-                      <h3 className="font-bold text-base text-gray-900 mb-2 line-clamp-2 group-hover:text-primary transition-colors">
-                        {activity.title}
-                      </h3>
-
-                      <p className="text-sm text-gray-600 line-clamp-2 mb-3">
-                        {activity.description}
-                      </p>
+                      {activity.rating && (
+                        <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-lg flex items-center gap-1 shadow-sm">
+                          <StarIcon className="w-4 h-4 text-yellow-500 fill-yellow-500" />
+                          <span className="text-xs font-semibold text-gray-900">
+                            {activity.rating}
+                          </span>
+                        </div>
+                      )}
                     </div>
 
-                    <div className="mt-auto pt-3 border-t border-gray-100">
-                      <div className="flex items-center gap-2">
-                        <span className="text-lg font-bold text-primary">
-                          Rp {displayPrice?.toLocaleString('id-ID')}
-                        </span>
-                        {showDiscount && (
-                          <span className="text-sm text-gray-400 line-through">
-                            Rp {activity.price?.toLocaleString('id-ID')}
-                          </span>
+                    <div className="flex-1 flex flex-col p-4">
+                      <div className="flex-1">
+                        {(activity.city || activity.province) && (
+                          <div className="flex items-center gap-1 text-xs text-gray-500 mb-2">
+                            <MapPinIcon className="w-3 h-3" />
+                            <span className="line-clamp-1">
+                              {activity.city && activity.province
+                                ? `${activity.city}, ${activity.province}`
+                                : activity.city || activity.province}
+                            </span>
+                          </div>
                         )}
+
+                        <h3 className="font-bold text-base text-gray-900 mb-2 line-clamp-2 group-hover:text-primary transition-colors">
+                          {activity.title}
+                        </h3>
+
+                        <p className="text-sm text-gray-600 line-clamp-2 mb-3">
+                          {activity.description}
+                        </p>
+                      </div>
+
+                      <div className="mt-auto pt-3 border-t border-gray-100">
+                        <div className="flex items-center gap-2">
+                          <span className="text-lg font-bold text-primary">
+                            Rp {displayPrice?.toLocaleString('id-ID')}
+                          </span>
+                          {showDiscount && (
+                            <span className="text-sm text-gray-400 line-through">
+                              Rp {activity.price?.toLocaleString('id-ID')}
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </Link>
-              );
-            })}
-          </div>
+                  </Link>
+                );
+              })}
+            </div>
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={goToPage}
+              />
+            )}
+          </>
         )}
       </div>
     </section>
