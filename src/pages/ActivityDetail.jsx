@@ -11,6 +11,7 @@ import { useAuth } from '../hooks/useAuth';
 import { useToast } from '../components/ui/Toast';
 import { useCart } from '../hooks/useCart';
 import Button from '../components/ui/Button';
+import fallbackimg from '../assets/candi.jpg';
 
 const ActivityDetail = () => {
   const { id } = useParams();
@@ -106,13 +107,13 @@ const ActivityDetail = () => {
     );
   }
 
-  // sanitize main image, avoid bad base64 and use placehold.co fallback
+  // sanitize main image, avoid bad base64
   const rawMainImage = activity.imageUrls?.[0] || '';
   const mainIsBrokenData =
     rawMainImage.startsWith('data:image/') && !rawMainImage.includes(',');
   const mainImage = mainIsBrokenData
-    ? 'https://placehold.co/600x400?text=No+Image'
-    : rawMainImage || 'https://placehold.co/600x400?text=No+Image';
+    ? fallbackimg
+    : rawMainImage || fallbackimg;
 
   return (
     <div className="min-h-screen bg-linear-to-br from-gray-50 to-blue-50 py-10">
@@ -134,7 +135,7 @@ const ActivityDetail = () => {
               onError={(e) => {
                 e.currentTarget.onerror = null;
                 e.currentTarget.src =
-                  'https://placehold.co/600x400?text=No+Image';
+                  fallbackimg;
               }}
             />
             {activity.imageUrls?.length > 1 && (

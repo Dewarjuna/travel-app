@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { ChevronRightIcon, MapPinIcon, StarIcon } from '@heroicons/react/24/outline';
 import { useActivities } from '../../hooks/useActivities';
+import fallbackimg from '../../assets/candi.jpg';
 
 const FeaturedActivities = () => {
   const { activities, loading } = useActivities();
@@ -54,8 +55,7 @@ const FeaturedActivities = () => {
                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                       onError={(e) => {
                         e.currentTarget.onerror = null;
-                        e.currentTarget.src =
-                          'https://placehold.co/600x400?text=No+Image';
+                        e.currentTarget.src = fallbackimg;
                       }}
                       loading="lazy"
                     />

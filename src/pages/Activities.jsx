@@ -3,6 +3,7 @@ import { useSearchParams, Link } from 'react-router-dom';
 import { MapPinIcon, StarIcon } from '@heroicons/react/24/outline';
 import { useActivities } from '../hooks/useActivities';
 import { useCategories } from '../hooks/useCategories';
+import fallbackimg from '../assets/candi.jpg';
 
 const Activities = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -186,8 +187,7 @@ const Activities = () => {
                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                       onError={(e) => {
                       e.currentTarget.onerror = null;
-                      e.currentTarget.src =
-                        'https://placehold.co/600x400?text=No+Image';
+                      e.currentTarget.src = fallbackimg;
                       }}
                       loading="lazy"
                     />

@@ -1,6 +1,8 @@
 import { useEffect } from 'react';
 import { TagIcon } from '@heroicons/react/24/outline';
 import { usePromos } from '../../hooks/usePromos';
+import fallbackimg from '../../assets/candi.jpg';
+
 const PromoGrid = () => {
   const { promos, loading } = usePromos();
   useEffect(() => {
@@ -48,8 +50,7 @@ const PromoGrid = () => {
                       loading="lazy"
                       onError={e => {
                         e.currentTarget.onerror = null;
-                        e.currentTarget.src =
-                          'https://placehold.co/600x400?text=No+Image';
+                        e.currentTarget.src = fallbackimg;
                       }}
                     />
                     <div className="absolute inset-0 bg-linear-to-t from-black/40 to-transparent" />

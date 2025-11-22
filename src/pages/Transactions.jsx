@@ -12,6 +12,7 @@ import {
 import { useTransactions } from '../hooks/useTransactions.js';
 import { useToast } from '../components/ui/Toast';
 import Button from '../components/ui/Button';
+import fallbackimg from '../assets/candi.jpg';
 
 const Transactions = () => {
   const { transactions, loading } = useTransactions();
@@ -161,8 +162,7 @@ const Transactions = () => {
                         className="w-20 h-20 object-cover rounded-xl shrink-0 shadow-sm"
                         onError={(e) => {
                         e.currentTarget.onerror = null;
-                        e.currentTarget.src =
-                          'https://placehold.co/600x400?text=No+Image';
+                        e.currentTarget.src = fallbackimg;
                         }}
                       />
                     )}
