@@ -40,7 +40,7 @@ const AdminSidebar = ({ isOpen }) => {
               }`
             }
           >
-            <item.icon className="w-6 h-6 flex-shrink-0" />
+            <item.icon className="w-6 h-6 shrink-0" />
             {isOpen && <span>{item.label}</span>}
           </NavLink>
         ))}
