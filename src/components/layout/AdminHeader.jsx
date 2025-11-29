@@ -1,3 +1,7 @@
+<<<<<<< HEAD
+=======
+// src/components/layout/AdminHeader.jsx
+>>>>>>> 8d79e2b82949478a72ec7735a5ecdc4a5d3b9f32
 import {
   Bars3Icon,
   BellIcon,

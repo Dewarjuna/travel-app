@@ -1,3 +1,4 @@
+// src/components/layout/AdminSidebar.jsx
 import { NavLink } from 'react-router-dom';
 import {
   HomeIcon,

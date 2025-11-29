@@ -19,7 +19,11 @@ const AdminTable = ({
   title,
   actions,
   itemsPerPage = DEFAULT_ITEMS_PER_PAGE,
+<<<<<<< HEAD
   onRowClick,
+=======
+  onRowClick, // NEW: optional row click handler
+>>>>>>> 8d79e2b82949478a72ec7735a5ecdc4a5d3b9f32
 }) => {
   const trimmedSearch = searchValue.trim().toLowerCase();
 
