@@ -1,4 +1,3 @@
-// src/pages/admin/components/ActivityFormModal.jsx
 import { memo, useCallback, useEffect, useMemo } from 'react';
 import { Modal, ModalHeader, ModalBody, ModalFooter } from '../../../components/modal';
 import FormField from '../../../components/ui/FormField';

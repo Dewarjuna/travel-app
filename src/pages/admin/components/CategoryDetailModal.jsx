@@ -1,4 +1,3 @@
-// src/pages/admin/components/CategoryDetailModal.jsx
 import { memo, useMemo } from 'react';
 import { Modal, ModalHeader, ModalBody } from '../../../components/modal';
 import fallbackImg from '../../../assets/candi.jpg';

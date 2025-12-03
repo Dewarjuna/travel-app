@@ -1,4 +1,3 @@
-// src/hooks/useActivityManagement.js
 import { useState, useCallback } from 'react';
 import { activityService } from '../api/services/activityService';
 import { notifySuccess, notifyError } from '../components/ui/notifications';

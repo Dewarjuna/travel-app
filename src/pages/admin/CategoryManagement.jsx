@@ -1,4 +1,3 @@
-// src/pages/admin/CategoryManagement.jsx
 import { useState, useMemo, useCallback } from 'react';
 import { useCategories } from '../../hooks/useCategories';
 import { useModal } from '../../hooks/useModal';
@@ -140,7 +139,7 @@ const CategoryManagement = () => {
 
       {/* Stats Card */}
       <div className="mb-6">
-        <div className="rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 p-4 text-white shadow-lg sm:p-6">
+        <div className="rounded-xl bg-linear-to-r from-blue-500 to-blue-600 p-4 text-white shadow-lg sm:p-6">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-blue-100">

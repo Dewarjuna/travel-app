@@ -1,4 +1,3 @@
-// src/pages/admin/components/CategoryFormModal.jsx
 import { memo, useCallback, useEffect } from 'react';
 import {
   Modal,

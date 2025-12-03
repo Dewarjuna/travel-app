@@ -1,4 +1,3 @@
-// src/pages/admin/ActivityManagement.jsx
 import { useState, useMemo, useCallback } from 'react';
 import { useActivities } from '../../hooks/useActivities';
 import { useCategories } from '../../hooks/useCategories';

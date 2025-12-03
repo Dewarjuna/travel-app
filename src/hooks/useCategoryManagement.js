@@ -1,4 +1,3 @@
-// src/hooks/useCategoryManagement.js
 import { useState, useCallback } from 'react';
 import { categoryService } from '../api/services/categoryService';
 import { notifySuccess, notifyError } from '../components/ui/notifications';

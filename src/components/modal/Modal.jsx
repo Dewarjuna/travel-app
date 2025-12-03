@@ -1,4 +1,3 @@
-// src/components/modal/Modal.jsx
 import { useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 

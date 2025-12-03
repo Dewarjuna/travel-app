@@ -1,4 +1,3 @@
-// src/pages/admin/components/categoryColumns.jsx
 import Button from '../../../components/ui/Button';
 import fallbackImg from '../../../assets/candi.jpg';
 

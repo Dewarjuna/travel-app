@@ -1,4 +1,3 @@
-// src/components/modal/ModalFooter.jsx
 const ModalFooter = ({ children, className = '' }) => {
   return (
     <div

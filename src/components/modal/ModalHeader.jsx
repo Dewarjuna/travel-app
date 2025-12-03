@@ -1,4 +1,3 @@
-// src/components/modal/ModalHeader.jsx
 import Button from '../ui/Button';
 
 const ModalHeader = ({ title, subtitle, onClose }) => {

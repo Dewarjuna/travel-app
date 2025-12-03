@@ -1,4 +1,3 @@
-// src/hooks/useFormState.js
 import { useState, useCallback } from 'react';
 
 export const useFormState = (initialState = {}) => {

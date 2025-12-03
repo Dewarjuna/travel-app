@@ -1,4 +1,3 @@
-// src/hooks/useModal.js
 import { useState, useCallback } from 'react';
 
 export const useModal = (initialState = false) => {
