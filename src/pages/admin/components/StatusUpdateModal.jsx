@@ -180,7 +180,7 @@ function StatusUpdateModal({
 
   return ReactDOM.createPortal(
     <div
-      className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
+      className="fixed inset-0 z-9999 flex items-center justify-center p-4"
       role="dialog"
       aria-modal="true"
       aria-labelledby="status-modal-title"

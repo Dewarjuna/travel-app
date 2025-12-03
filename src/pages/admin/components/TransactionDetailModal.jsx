@@ -66,12 +66,12 @@ const STATUS_CONFIG = {
 // Info Row Component
 const InfoRow = ({ icon: Icon, label, value, className = '' }) => (
   <div className={`flex items-start gap-3 ${className}`}>
-    <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-gray-100">
+    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gray-100">
       <Icon className="h-4 w-4 text-gray-500" />
     </div>
     <div className="min-w-0 flex-1">
       <p className="text-xs text-gray-500">{label}</p>
-      <p className="break-words text-sm font-medium text-gray-900">
+      <p className="wrap-break-word text-sm font-medium text-gray-900">
         {value || '-'}
       </p>
     </div>
@@ -116,7 +116,7 @@ function TransactionDetailModal({ isOpen, onClose, transaction }) {
 
   return ReactDOM.createPortal(
     <div
-      className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
+      className="fixed inset-0 z-9999 flex items-center justify-center p-4"
       role="dialog"
       aria-modal="true"
       aria-labelledby="detail-modal-title"
@@ -136,7 +136,7 @@ function TransactionDetailModal({ isOpen, onClose, transaction }) {
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex flex-shrink-0 items-center justify-between border-b border-gray-200 px-6 py-4">
+        <div className="flex shrink-0 items-center justify-between border-b border-gray-200 px-6 py-4">
           <div>
             <h2
               id="detail-modal-title"
@@ -217,7 +217,7 @@ function TransactionDetailModal({ isOpen, onClose, transaction }) {
             {paymentMethod ? (
               <div className="flex items-start gap-4 rounded-lg border border-gray-200 bg-white p-3">
                 {/* Payment Method Image */}
-                <div className="flex h-12 w-16 flex-shrink-0 items-center justify-center overflow-hidden rounded-lg bg-gray-100 p-2">
+                <div className="flex h-12 w-16 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-gray-100 p-2">
                   {paymentMethod.imageUrl ? (
                     <img
                       src={paymentMethod.imageUrl}
@@ -278,7 +278,7 @@ function TransactionDetailModal({ isOpen, onClose, transaction }) {
                     className="flex gap-4 rounded-lg border border-gray-200 bg-white p-3"
                   >
                     {/* Product Image */}
-                    <div className="h-20 w-20 flex-shrink-0 overflow-hidden rounded-lg bg-gray-100">
+                    <div className="h-20 w-20 shrink-0 overflow-hidden rounded-lg bg-gray-100">
                       {item.imageUrls && item.imageUrls.length > 0 ? (
                         <img
                           src={item.imageUrls[0]}
@@ -319,7 +319,7 @@ function TransactionDetailModal({ isOpen, onClose, transaction }) {
                     </div>
 
                     {/* Subtotal */}
-                    <div className="flex-shrink-0 text-right">
+                    <div className="shrink-0 text-right">
                       <p className="text-sm font-bold text-gray-900">
                         {formatCurrency(
                           (item.price || 0) * (item.quantity || 1)
@@ -365,7 +365,7 @@ function TransactionDetailModal({ isOpen, onClose, transaction }) {
         </div>
 
         {/* Footer */}
-        <div className="flex-shrink-0 border-t border-gray-200 bg-gray-50 px-6 py-4">
+        <div className="shrink-0 border-t border-gray-200 bg-gray-50 px-6 py-4">
           <button
             onClick={onClose}
             className="w-full rounded-xl bg-gray-900 px-4 py-2.5 font-medium text-white transition-colors hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
