@@ -625,7 +625,7 @@ const PromoManagement = () => {
                   value={formState.terms_condition || ''}
                   onChange={handleFormChange}
                   rows={4}
-                  className="w-full resize-vertical rounded-xl border border-gray-300 px-4 py-2.5 text-sm font-mono text-xs focus:border-transparent focus:ring-2 focus:ring-blue-500"
+                  className="w-full resize-vertical rounded-xl border border-gray-300 px-4 py-2.5 text-sm font-mono focus:border-transparent focus:ring-2 focus:ring-blue-500"
                   placeholder="e.g., 1. Valid until 31 Dec 2024&#10;2. Applicable for orders above Rp 500,000&#10;3. Cannot be combined with other promos"
                   required
                 />
