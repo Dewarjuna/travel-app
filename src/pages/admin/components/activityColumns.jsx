@@ -83,51 +83,51 @@ export const createActivityColumns = ({
       </div>
     ),
   },
-  {
-    header: 'ACTIONS',
-    key: 'actions',
-    align: 'right',
-    className: 'w-auto',
-    render: (item) => (
-      <div className="flex flex-wrap justify-end gap-1 sm:gap-2">
-        <Button
-          size="sm"
-          variant="ghost"
-          onClick={(e) => {
-            e.stopPropagation();
-            onDetail(item);
-          }}
-          aria-label={`View details of ${item.title}`}
-        >
-          <span className="hidden sm:inline">Detail</span>
-          <span className="sm:hidden">👁</span>
-        </Button>
-        <Button
-          size="sm"
-          variant="secondary"
-          onClick={(e) => {
-            e.stopPropagation();
-            onEdit(item);
-          }}
-          aria-label={`Edit ${item.title}`}
-        >
-          <span className="hidden sm:inline">Edit</span>
-          <span className="sm:hidden">✏️</span>
-        </Button>
-        <Button
-          size="sm"
-          variant="danger"
-          onClick={(e) => {
-            e.stopPropagation();
-            onDelete(item.id);
-          }}
-          loading={deletingId === item.id}
-          aria-label={`Delete ${item.title}`}
-        >
-          <span className="hidden sm:inline">Delete</span>
-          <span className="sm:hidden">🗑</span>
-        </Button>
-      </div>
-    ),
-  },
+{
+  header: 'ACTIONS',
+  key: 'actions',
+  align: 'right',
+  className: 'w-auto whitespace-nowrap',
+  render: (item) => (
+    <div className="flex flex-nowrap justify-end gap-1 sm:gap-2">
+      <Button
+        size="sm"
+        variant="ghost"
+        onClick={(e) => {
+          e.stopPropagation();
+          onDetail(item);
+        }}
+        aria-label={`View details of ${item.title}`}
+      >
+        <span className="hidden sm:inline">Detail</span>
+        <span className="sm:hidden">👁</span>
+      </Button>
+      <Button
+        size="sm"
+        variant="secondary"
+        onClick={(e) => {
+          e.stopPropagation();
+          onEdit(item);
+        }}
+        aria-label={`Edit ${item.title}`}
+      >
+        <span className="hidden sm:inline">Edit</span>
+        <span className="sm:hidden">✏️</span>
+      </Button>
+      <Button
+        size="sm"
+        variant="danger"
+        onClick={(e) => {
+          e.stopPropagation();
+          onDelete(item.id);
+        }}
+        loading={deletingId === item.id}
+        aria-label={`Delete ${item.title}`}
+      >
+        <span className="hidden sm:inline">Delete</span>
+        <span className="sm:hidden">🗑</span>
+      </Button>
+    </div>
+  ),
+},
 ];

@@ -4,16 +4,18 @@ import { useAuth } from '../../hooks/useAuth';
 import { useToast } from '../ui/Toast';
 
 const Navbar = () => {
-  const { isAuthenticated, user, logout } = useAuth();
+  const { isAuthenticated, user, logout, isAdmin } = useAuth(); // Add isAdmin here
   const { addToast } = useToast();
   const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  
   const linkClass = ({ isActive }) =>
     `px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
       isActive
         ? 'bg-blue-600 text-white shadow-sm'
         : 'text-gray-700 hover:bg-gray-100 hover:text-blue-600'
     }`;
+    
   const handleLogout = async () => {
     try {
       await logout();
@@ -24,9 +26,11 @@ const Navbar = () => {
       console.error('Logout error:', error);
     }
   };
+  
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
   };
+  
   const closeMobileMenu = () => {
     setIsMobileMenuOpen(false);
   };
@@ -74,6 +78,16 @@ const Navbar = () => {
                     Profile
                   </NavLink>
                 </li>
+                
+                {/* Admin */}
+                {isAdmin && (
+                  <li>
+                    <NavLink to="/admin" className={linkClass} onClick={closeMobileMenu}>
+                      Admin
+                    </NavLink>
+                  </li>
+                )}
+                
                 <li>
                   <button
                     onClick={handleLogout}
@@ -173,6 +187,16 @@ const Navbar = () => {
                       Profile
                     </NavLink>
                   </li>
+                  
+                  {/* Admin button */}
+                  {isAdmin && (
+                    <li>
+                      <NavLink to="/admin" className={linkClass} onClick={closeMobileMenu}>
+                        Admin
+                      </NavLink>
+                    </li>
+                  )}
+                  
                   <li>
                     <button
                       onClick={handleLogout}
