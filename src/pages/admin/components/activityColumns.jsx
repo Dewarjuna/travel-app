@@ -1,5 +1,6 @@
 import Button from '../../../components/ui/Button';
 import fallbackImg from '../../../assets/candi.jpg';
+import { EyeIcon, PencilSquareIcon, TrashIcon } from '@heroicons/react/24/outline';
 
 export const createActivityColumns = ({
   onDetail,
@@ -87,9 +88,9 @@ export const createActivityColumns = ({
     header: 'ACTIONS',
     key: 'actions',
     align: 'right',
-    className: 'w-auto',
+    className: 'w-auto whitespace-nowrap',
     render: (item) => (
-      <div className="flex flex-wrap justify-end gap-1 sm:gap-2">
+      <div className="flex flex-nowrap justify-end gap-1 sm:gap-2">
         <Button
           size="sm"
           variant="ghost"
@@ -100,7 +101,7 @@ export const createActivityColumns = ({
           aria-label={`View details of ${item.title}`}
         >
           <span className="hidden sm:inline">Detail</span>
-          <span className="sm:hidden">👁</span>
+          <EyeIcon className="h-4 w-4 sm:hidden" />
         </Button>
         <Button
           size="sm"
@@ -112,7 +113,7 @@ export const createActivityColumns = ({
           aria-label={`Edit ${item.title}`}
         >
           <span className="hidden sm:inline">Edit</span>
-          <span className="sm:hidden">✏️</span>
+          <PencilSquareIcon className="h-4 w-4 sm:hidden" />
         </Button>
         <Button
           size="sm"
@@ -125,7 +126,7 @@ export const createActivityColumns = ({
           aria-label={`Delete ${item.title}`}
         >
           <span className="hidden sm:inline">Delete</span>
-          <span className="sm:hidden">🗑</span>
+          <TrashIcon className="h-4 w-4 sm:hidden" />
         </Button>
       </div>
     ),
