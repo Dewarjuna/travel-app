@@ -22,12 +22,16 @@ const Cart = () => {
   const [checkingOut, setCheckingOut] = useState(false);
   const navigate = useNavigate();
   const { addToast } = useToast();
+  
+  // Calculate total using base price only (matching backend logic)
   const total = cartItems.reduce((sum, item) => {
-    const price = item.activity?.price_discount || item.price_discount || 0;
+    const activity = item.activity || item;
+    const basePrice = activity.price || 0;
     const qty = item.quantity || 0;
-    return sum + (price * qty);
+    return sum + (basePrice * qty);
   }, 0);
-   const handleCheckout = async function() {
+  
+  const handleCheckout = async function() {
     if (!selectedPaymentMethod) {
       addToast('Please select a payment method', 'error');
       return;
@@ -50,6 +54,7 @@ const Cart = () => {
       setCheckingOut(false);
     }
   };
+  
   if (cartLoading || paymentLoading) {
     return (
       <div className="min-h-screen bg-linear-to-br from-gray-50 to-blue-50 py-10">
@@ -109,7 +114,7 @@ const Cart = () => {
                 const activity = item.activity || item;
                 const imageUrl = activity.imageUrls?.[0] || activity.imageUrl || '';
                 const title = activity.title || 'Unknown Activity';
-                const priceDiscount = activity.price_discount || 0;
+                const price = activity.price || 0;
                 const quantity = item.quantity || 1;
 
                 return (
@@ -123,14 +128,14 @@ const Cart = () => {
                         alt={title}
                         className="w-28 h-28 object-cover rounded-xl shrink-0 shadow-sm"
                         onError={(e) => {
-                      e.currentTarget.onerror = null;
-                      e.currentTarget.src = fallbackimg;
-                      }}
+                          e.currentTarget.onerror = null;
+                          e.currentTarget.src = fallbackimg;
+                        }}
                       />
                       <div className="flex-1 min-w-0">
                         <h3 className="font-bold text-xl text-gray-900 mb-2 line-clamp-2">{title}</h3>
                         <p className="text-blue-600 font-bold text-xl mb-4">
-                          Rp {priceDiscount.toLocaleString('id-ID')}
+                          Rp {price.toLocaleString('id-ID')}
                         </p>
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-3">
@@ -152,7 +157,7 @@ const Cart = () => {
                           <div className="text-right">
                             <p className="text-sm text-gray-500 mb-1 font-medium">Subtotal</p>
                             <p className="font-bold text-2xl text-gray-900">
-                              Rp {(priceDiscount * quantity).toLocaleString('id-ID')}
+                              Rp {(price * quantity).toLocaleString('id-ID')}
                             </p>
                           </div>
                         </div>
