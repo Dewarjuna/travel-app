@@ -13,6 +13,7 @@ import {
   BanknotesIcon,
 } from '@heroicons/react/24/outline';
 
+
 // Format currency
 const formatCurrency = (amount) => {
   return new Intl.NumberFormat('id-ID', {
@@ -21,6 +22,7 @@ const formatCurrency = (amount) => {
     minimumFractionDigits: 0,
   }).format(amount || 0);
 };
+
 
 // Format date - with error handling
 const formatDate = (dateString) => {
@@ -44,6 +46,7 @@ const formatDate = (dateString) => {
   }
 };
 
+
 // Status configuration
 const STATUS_CONFIG = {
   pending: {
@@ -61,7 +64,13 @@ const STATUS_CONFIG = {
     color: 'bg-red-100 text-red-800',
     icon: XCircleIcon,
   },
+  cancelled: {
+    label: 'Dibatalkan',
+    color: 'bg-gray-100 text-gray-800',
+    icon: XCircleIcon,
+  },
 };
+
 
 // Info Row Component
 const InfoRow = ({ icon: Icon, label, value, className = '' }) => (
@@ -77,6 +86,7 @@ const InfoRow = ({ icon: Icon, label, value, className = '' }) => (
     </div>
   </div>
 );
+
 
 function TransactionDetailModal({ isOpen, onClose, transaction }) {
   const modalRef = useRef(null);
@@ -109,9 +119,11 @@ function TransactionDetailModal({ isOpen, onClose, transaction }) {
   const statusConfig = STATUS_CONFIG[transaction.status] || STATUS_CONFIG.pending;
   const StatusIcon = statusConfig.icon;
 
-  // Calculate subtotal from items
+  // Calculate subtotal using base price only (matching backend logic)
   const subtotal = items.reduce((sum, item) => {
-    return sum + (item.price || 0) * (item.quantity || 1);
+    const basePrice = item.price || 0;
+    const quantity = item.quantity || 1;
+    return sum + (basePrice * quantity);
   }, 0);
 
   return ReactDOM.createPortal(
@@ -272,62 +284,61 @@ function TransactionDetailModal({ isOpen, onClose, transaction }) {
 
             <div className="space-y-3">
               {items.length > 0 ? (
-                items.map((item, index) => (
-                  <div
-                    key={item.id || index}
-                    className="flex gap-4 rounded-lg border border-gray-200 bg-white p-3"
-                  >
-                    {/* Product Image */}
-                    <div className="h-20 w-20 shrink-0 overflow-hidden rounded-lg bg-gray-100">
-                      {item.imageUrls && item.imageUrls.length > 0 ? (
-                        <img
-                          src={item.imageUrls[0]}
-                          alt={item.title}
-                          className="h-full w-full object-cover"
-                          onError={(e) => {
-                            e.target.onerror = null;
-                            e.target.style.display = 'none';
-                          }}
-                        />
-                      ) : (
-                        <div className="flex h-full w-full items-center justify-center">
-                          <ShoppingBagIcon className="h-8 w-8 text-gray-400" />
-                        </div>
-                      )}
-                    </div>
+                items.map((item, index) => {
+                  const price = item.price || 0;
+                  const quantity = item.quantity || 1;
+                  const itemTotal = price * quantity;
 
-                    {/* Product Info */}
-                    <div className="min-w-0 flex-1">
-                      <p className="line-clamp-2 text-sm font-semibold text-gray-900">
-                        {item.title || 'Product'}
-                      </p>
-                      {item.description && (
-                        <p className="mt-1 line-clamp-2 text-xs text-gray-500">
-                          {item.description}
-                        </p>
-                      )}
-                      <div className="mt-2 flex items-center gap-2">
-                        <span className="text-xs text-gray-500">
-                          {item.quantity || 1} x {formatCurrency(item.price)}
-                        </span>
-                        {item.price_discount > 0 && (
-                          <span className="text-xs font-medium text-green-600">
-                            (-{item.price_discount}%)
-                          </span>
+                  return (
+                    <div
+                      key={item.id || index}
+                      className="flex gap-4 rounded-lg border border-gray-200 bg-white p-3"
+                    >
+                      {/* Product Image */}
+                      <div className="h-20 w-20 shrink-0 overflow-hidden rounded-lg bg-gray-100">
+                        {item.imageUrls && item.imageUrls.length > 0 ? (
+                          <img
+                            src={item.imageUrls[0]}
+                            alt={item.title}
+                            className="h-full w-full object-cover"
+                            onError={(e) => {
+                              e.target.onerror = null;
+                              e.target.style.display = 'none';
+                            }}
+                          />
+                        ) : (
+                          <div className="flex h-full w-full items-center justify-center">
+                            <ShoppingBagIcon className="h-8 w-8 text-gray-400" />
+                          </div>
                         )}
                       </div>
-                    </div>
 
-                    {/* Subtotal */}
-                    <div className="shrink-0 text-right">
-                      <p className="text-sm font-bold text-gray-900">
-                        {formatCurrency(
-                          (item.price || 0) * (item.quantity || 1)
+                      {/* Product Info */}
+                      <div className="min-w-0 flex-1">
+                        <p className="line-clamp-2 text-sm font-semibold text-gray-900">
+                          {item.title || 'Product'}
+                        </p>
+                        {item.description && (
+                          <p className="mt-1 line-clamp-2 text-xs text-gray-500">
+                            {item.description}
+                          </p>
                         )}
-                      </p>
+                        <div className="mt-2 flex items-center gap-2">
+                          <span className="text-xs text-gray-500">
+                            {quantity} x {formatCurrency(price)}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Subtotal */}
+                      <div className="shrink-0 text-right">
+                        <p className="text-sm font-bold text-gray-900">
+                          {formatCurrency(itemTotal)}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                ))
+                  );
+                })
               ) : (
                 <div className="py-8 text-center">
                   <ShoppingBagIcon className="mx-auto mb-3 h-12 w-12 text-gray-300" />
@@ -378,5 +389,6 @@ function TransactionDetailModal({ isOpen, onClose, transaction }) {
     document.body
   );
 }
+
 
 export default TransactionDetailModal;
