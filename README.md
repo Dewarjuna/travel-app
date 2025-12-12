@@ -1,16 +1,20 @@
-# React + Vite
+# DewaTravel – Travel Activity Booking App
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+DewaTravel is a travel activity booking web app built with React, Vite, and Tailwind CSS, with complete user and admin panels.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- User: browse/search activities, manage cart and checkout, auth, profile, and view transactions. 
+- Admin: secure dashboard to manage activities, categories, promos/banners, users, and transactions.
 
-## React Compiler
+## Tech Stack
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- React + Vite for fast development and builds.
+- Tailwind CSS for styling.
+- Axios service layer for calling the Dibimbing Travel API backend.
 
-## Expanding the ESLint configuration
+## Scripts
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+- `npm run dev` – start development server.
+- `npm run build` – build for production.
+- `npm run preview` – preview production build.
