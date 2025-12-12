@@ -1,23 +1,22 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
 import { useAuth } from '../hooks/useAuth';
 import { useToast } from '../components/ui/Toast';
 import Button from '../components/ui/Button';
 
-
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const nav = useNavigate();
   const { login, isAuthenticated, isAdmin } = useAuth();
   const { addToast } = useToast();
 
-
   useEffect(() => {
     if (isAuthenticated) {
-      // Redirect admin to admin panel, regular users to home
       if (isAdmin) {
         nav('/admin');
       } else {
@@ -25,7 +24,6 @@ const Login = () => {
       }
     }
   }, [isAuthenticated, isAdmin, nav]);
-
 
   const validate = () => {
     const newErrors = {};
@@ -38,7 +36,6 @@ const Login = () => {
     return newErrors;
   };
 
-
   const onSubmit = async (e) => {
     e.preventDefault();
     const newErrors = validate();
@@ -47,26 +44,32 @@ const Login = () => {
       return;
     }
 
-
     setLoading(true);
     try {
       const result = await login(email, password);
       addToast('Login successful!', 'success');
-      
-      // Redirect based on role after successful login
+
       if (result?.data?.role === 'admin') {
         nav('/admin');
       } else {
         nav('/');
       }
     } catch (err) {
-      const msg = err.response?.data?.message || err.message || 'Login failed';
-      addToast(msg, 'error');
+      const statusCode = err.response?.status;
+
+      if (statusCode === 404 || statusCode === 401 || statusCode === 400) {
+        addToast('Invalid email or password', 'error');
+      } else if (statusCode === 429) {
+        addToast('Too many attempts. Please try again later.', 'error');
+      } else if (statusCode >= 500) {
+        addToast('Server error. Please try again later.', 'error');
+      } else {
+        addToast('Unable to sign in. Please try again.', 'error');
+      }
     } finally {
       setLoading(false);
     }
   };
-
 
   return (
     <div className="min-h-screen bg-linear-to-br from-blue-50 to-indigo-100 flex items-center justify-center px-4 py-12">
@@ -76,7 +79,6 @@ const Login = () => {
             <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome Back</h1>
             <p className="text-gray-600">Sign in to your account</p>
           </div>
-
 
           <form onSubmit={onSubmit} className="space-y-5">
             <div>
@@ -90,7 +92,7 @@ const Login = () => {
                 value={email}
                 onChange={(e) => {
                   setEmail(e.target.value);
-                  if (errors.email) setErrors(prev => ({ ...prev, email: '' }));
+                  if (errors.email) setErrors((prev) => ({ ...prev, email: '' }));
                 }}
               />
               {errors.email && (
@@ -98,32 +100,43 @@ const Login = () => {
               )}
             </div>
 
-
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">
                 Password
               </label>
-              <input
-                type="password"
-                className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
-                placeholder="- - - - - - - - "
-                value={password}
-                onChange={(e) => {
-                  setPassword(e.target.value);
-                  if (errors.password) setErrors(prev => ({ ...prev, password: '' }));
-                }}
-              />
+              <div className="relative">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  className="w-full px-4 py-3 pr-12 rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
+                  placeholder="- - - - - - - - "
+                  value={password}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    if (errors.password) setErrors((prev) => ({ ...prev, password: '' }));
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none focus:text-blue-500 transition-colors"
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showPassword ? (
+                    <EyeSlashIcon className="w-5 h-5" />
+                  ) : (
+                    <EyeIcon className="w-5 h-5" />
+                  )}
+                </button>
+              </div>
               {errors.password && (
                 <p className="text-red-500 text-sm mt-1.5">{errors.password}</p>
               )}
             </div>
 
-
             <Button type="submit" loading={loading} disabled={loading} fullWidth>
               {loading ? 'Signing in...' : 'Sign In'}
             </Button>
           </form>
-
 
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
@@ -134,10 +147,9 @@ const Login = () => {
             </div>
           </div>
 
-
           <p className="text-center">
-            <Link 
-              to="/register" 
+            <Link
+              to="/register"
               className="text-blue-600 font-semibold hover:text-blue-700 transition-colors"
             >
               Create an account
@@ -148,6 +160,5 @@ const Login = () => {
     </div>
   );
 };
-
 
 export default Login;

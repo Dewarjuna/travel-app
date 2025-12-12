@@ -18,3 +18,7 @@ DewaTravel is a travel activity booking web app built with React, Vite, and Tail
 - `npm run dev` – start development server.
 - `npm run build` – build for production.
 - `npm run preview` – preview production build.
+
+## Deployment
+- bejewelled-semifreddo-3f3476.netlify.app
+- travel-app-omega-steel-64.vercel.app
